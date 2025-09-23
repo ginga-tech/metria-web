@@ -1,0 +1,16 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap");
+
+@import "tailwindcss";
+
+
+/* (opcional) ajustes globais bÃ¡sicos */
+html, body, #root { height: 100%; }
+
+/* Web fonts for improved typography */
+/* Default text font */
+body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif; }
+
+/* Display/heading helper class */
+.font-display { font-family: Poppins, Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif; }
+
+

@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>LifeBalance favicon (shapes only)</title>
+  <rect width="64" height="64" fill="none"/>
+  <!-- top stone -->
+  <ellipse cx="32" cy="14.5" rx="9" ry="8" fill="#2F6C92"/>
+  <!-- middle stone (slightly rotated) -->
+  <g transform="rotate(-12 34 31)">
+    <ellipse cx="34" cy="31" rx="16" ry="9" fill="#41B36E"/>
+  </g>
+  <!-- bottom stone -->
+  <rect x="18" y="40" width="28" height="18" rx="9" fill="#F96B11"/>
+</svg>
