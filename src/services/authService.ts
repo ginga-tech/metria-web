@@ -46,6 +46,39 @@ export async function exchangeGoogleCode(code: string, redirectUri?: string) {
   if (!r.ok) await handleError(r);
   return (await r.json()) as { token: string; expiresInSeconds?: number };
 }
+export async function forgotPassword(email: string) {
+  const API = import.meta.env.VITE_API_BASE_URL as string;
+  const r = await fetch(`${API}/api/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!r.ok) await handleError(r);
+  return r.json() as Promise<{ message: string }>;
+}
+
+export async function validateResetToken(token: string) {
+  const API = import.meta.env.VITE_API_BASE_URL as string;
+  const r = await fetch(`${API}/api/auth/validate-reset-token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!r.ok) await handleError(r);
+  return r.json() as Promise<{ valid: boolean }>;
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  const API = import.meta.env.VITE_API_BASE_URL as string;
+  const r = await fetch(`${API}/api/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, newPassword }),
+  });
+  if (!r.ok) await handleError(r);
+  return r.json() as Promise<{ message: string }>;
+}
+
 async function handleError(r: Response) {
   let msg = `Erro ${r.status}`;
   try {
@@ -57,4 +90,3 @@ async function handleError(r: Response) {
   } catch {}
   throw new Error(msg);
 }
-

@@ -8,9 +8,20 @@ export default function OAuthCallback() {
 
   useEffect(() => {
     (async () => {
+      // Verifica se está rodando em um popup
+      const isPopup = window.opener && window.opener !== window;
+      
       try {
         const url = new URL(window.location.href);
         console.log('OAuth Callback URL:', url.href);
+        
+        // CORREÇÃO TEMPORÁRIA: Se estiver na porta 5174, redireciona para 5173
+        if (url.port === '5174') {
+          console.log('Detectada porta 5174, redirecionando para 5173');
+          const newUrl = url.href.replace('localhost:5174', 'localhost:5173');
+          window.location.replace(newUrl);
+          return;
+        }
         
         // Só processa se estiver na rota de callback
         if (!url.pathname.includes('/oauth/callback')) {
@@ -35,13 +46,27 @@ export default function OAuthCallback() {
         }
         
         if (token) {
-          console.log('Salvando token e redirecionando para assessment');
-          localStorage.setItem('lb_token', token);
-          // Pequeno delay para garantir que o token foi salvo
-          setTimeout(() => {
-            navigate('/assessment', { replace: true });
-          }, 100);
-          return;
+          console.log('Token encontrado:', token.substring(0, 20) + '...');
+          
+          if (isPopup) {
+            // Se está em popup, envia mensagem para a janela pai
+            console.log('Enviando token via postMessage para janela pai');
+            window.opener.postMessage({
+              type: 'OAUTH_RESULT',
+              success: true,
+              token: token
+            }, window.location.origin);
+            window.close();
+            return;
+          } else {
+            // Se não está em popup, comportamento normal
+            console.log('Salvando token e redirecionando para assessment');
+            localStorage.setItem('lb_token', token);
+            setTimeout(() => {
+              navigate('/assessment', { replace: true });
+            }, 100);
+            return;
+          }
         }
         
         // Se não tem token, tenta processar o código de autorização
@@ -70,19 +95,58 @@ export default function OAuthCallback() {
         const error = url.searchParams.get('error');
         if (error) {
           console.error('Erro OAuth retornado:', error);
-          setError(`Erro OAuth: ${error}`);
-          setTimeout(() => navigate('/', { replace: true }), 5000);
-          return;
+          const errorMessage = `Erro OAuth: ${error}`;
+          
+          if (isPopup) {
+            // Se está em popup, envia erro para a janela pai
+            window.opener.postMessage({
+              type: 'OAUTH_RESULT',
+              success: false,
+              error: errorMessage
+            }, window.location.origin);
+            window.close();
+            return;
+          } else {
+            setError(errorMessage);
+            setTimeout(() => navigate('/', { replace: true }), 5000);
+            return;
+          }
         }
         
         // Se chegou aqui, algo deu errado
         console.error('Nenhum token, código ou erro encontrado na URL');
-        setError('Nenhum token ou código de autorização encontrado');
-        setTimeout(() => navigate('/', { replace: true }), 5000);
+        const errorMessage = 'Nenhum token ou código de autorização encontrado';
+        
+        if (isPopup) {
+          // Se está em popup, envia erro para a janela pai
+          window.opener.postMessage({
+            type: 'OAUTH_RESULT',
+            success: false,
+            error: errorMessage
+          }, window.location.origin);
+          window.close();
+          return;
+        } else {
+          setError(errorMessage);
+          setTimeout(() => navigate('/', { replace: true }), 5000);
+        }
       } catch (e: any) {
         console.error('Erro no callback OAuth:', e);
-        setError(e?.message || 'Erro ao processar autenticação');
-        setTimeout(() => navigate('/', { replace: true }), 5000);
+        const errorMessage = e?.message || 'Erro ao processar autenticação';
+        
+        if (isPopup) {
+          // Se está em popup, envia erro para a janela pai
+          window.opener.postMessage({
+            type: 'OAUTH_RESULT',
+            success: false,
+            error: errorMessage
+          }, window.location.origin);
+          window.close();
+          return;
+        } else {
+          setError(errorMessage);
+          setTimeout(() => navigate('/', { replace: true }), 5000);
+        }
       }
     })();
   }, [navigate]);

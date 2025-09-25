@@ -6,6 +6,8 @@ import Dashboard from "./pages/Dashboard";
 import Preferences from "./pages/Preferences";
 import Goals from "./pages/Goals";
 import OAuthCallback from "./pages/OAuthCallback";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "../index.css";
 
@@ -44,6 +46,8 @@ const router = createBrowserRouter([
     ) 
   },
   { path: "/oauth/callback", element: <OAuthCallback /> },
+  { path: "/forgot-password", element: <ForgotPassword /> },
+  { path: "/reset-password", element: <ResetPassword /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
