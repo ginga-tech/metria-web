@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import lifeBalanceLogo from "../assets/lifebalance-logo.svg";
 import "../styles/slider.css";
@@ -79,11 +79,81 @@ export default function Assessment() {
   const navigate = useNavigate();
   const [values, setValues] = useState<Record<DimensionKey, number>>(() => {
     const v: Record<DimensionKey, number> = Object.create(null);
-    DIMENSIONS.forEach((d) => (v[d.key] = 3)); // default = 3 (equilíbrio neutro)
+    DIMENSIONS.forEach((d) => (v[d.key] = 3)); // default inicial = 3
     return v;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastAssessmentDate, setLastAssessmentDate] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Carrega os dados salvos do usuário
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadSavedAssessment = async () => {
+      setIsLoading(true);
+      try {
+        const API = import.meta.env.VITE_API_BASE_URL as string | undefined;
+        const token = localStorage.getItem("lb_token") ?? "";
+
+        if (API && token) {
+          const r = await fetch(`${API}/api/assessment/latest`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          
+          if (r.ok) {
+            const data = await r.json();
+            if (mounted && data.scores) {
+              // Carrega os valores salvos
+              const savedValues: Record<DimensionKey, number> = Object.create(null);
+              DIMENSIONS.forEach((d) => {
+                savedValues[d.key] = data.scores[d.key] ?? 3;
+              });
+              setValues(savedValues);
+              setLastAssessmentDate(data.createdAtUtc);
+              setIsEditing(true);
+            }
+          } else if (r.status === 404) {
+            // Não tem assessment ainda, usa dados locais se houver
+            const local = readLocalAssessment();
+            if (mounted && local?.scores) {
+              const savedValues: Record<DimensionKey, number> = Object.create(null);
+              DIMENSIONS.forEach((d) => {
+                savedValues[d.key] = local.scores[d.key] ?? 3;
+              });
+              setValues(savedValues);
+              setLastAssessmentDate(local.createdAtUtc);
+              setIsEditing(true);
+            }
+          }
+        } else {
+          // Sem API, tenta carregar dados locais
+          const local = readLocalAssessment();
+          if (mounted && local?.scores) {
+            const savedValues: Record<DimensionKey, number> = Object.create(null);
+            DIMENSIONS.forEach((d) => {
+              savedValues[d.key] = local.scores[d.key] ?? 3;
+            });
+            setValues(savedValues);
+            setLastAssessmentDate(local.createdAtUtc);
+            setIsEditing(true);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar assessment:', error);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    loadSavedAssessment();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const avg = useMemo(() =>
     Math.round((Object.values(values).reduce((a, b) => a + b, 0) / DIMENSIONS.length) * 10) / 10
@@ -158,11 +228,24 @@ export default function Assessment() {
             </div>
 
             <h2 className="font-display text-xl sm:text-2xl font-bold leading-tight tracking-tight text-center mb-4">
-              Autoavaliação das 10 Dimensões
+              {isEditing ? "Editar Avaliação" : "Autoavaliação das 10 Dimensões"}
             </h2>
             <p className="text-[#7A4312]/90 text-center mb-6">
-              Avalie honestamente cada dimensão da sua vida de 1 a 5. Esta análise será a base para gerar seu radar de equilíbrio personalizado.
+              {isEditing 
+                ? "Ajuste suas pontuações conforme sua evolução atual. As alterações serão salvas com nova data."
+                : "Avalie honestamente cada dimensão da sua vida de 1 a 5. Esta análise será a base para gerar seu radar de equilíbrio personalizado."
+              }
             </p>
+
+            {/* Informação da última avaliação */}
+            {isEditing && lastAssessmentDate && (
+              <div className="mb-6 p-4 rounded-xl bg-[#41B36E]/10 border border-[#41B36E]/20">
+                <p className="text-sm text-[#2F6C92] font-medium mb-1">📅 Última avaliação:</p>
+                <p className="text-sm text-[#2F6C92]/80">
+                  {formatDate(lastAssessmentDate)}
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="rounded-xl bg-[#F3F4F6] p-4 text-center">
@@ -191,14 +274,21 @@ export default function Assessment() {
         <section className="rounded-2xl shadow-xl bg-white p-6 sm:p-8 order-1 lg:order-2">
           <div className="mb-6">
             <p className="text-sm text-[#2F6C92] font-medium mb-1">
-              Sua jornada de autoconhecimento
+              {isEditing ? "Atualize sua avaliação" : "Sua jornada de autoconhecimento"}
             </p>
             <h3 className="text-2xl sm:text-3xl font-semibold text-[#2F6C92]">
-              Avalie suas dimensões
+              {isEditing ? "Editar dimensões" : "Avalie suas dimensões"}
             </h3>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {isLoading && (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2F6C92]"></div>
+              <span className="ml-3 text-[#2F6C92]">Carregando sua avaliação...</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className={`space-y-4 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
             {DIMENSIONS.map((d) => (
               <DimensionCard
                 key={d.key}
@@ -212,10 +302,13 @@ export default function Assessment() {
             <div className="pt-4 space-y-3">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoading}
                 className="w-full h-12 rounded-xl bg-[#41B36E] text-white font-semibold hover:brightness-95 disabled:opacity-60 transition"
               >
-                {isSubmitting ? "Gerando seu Balance..." : "Gerar meu LifeBalance"}
+                {isSubmitting 
+                  ? (isEditing ? "Salvando alterações..." : "Gerando seu Balance...") 
+                  : (isEditing ? "Salvar Alterações" : "Gerar meu LifeBalance")
+                }
               </button>
               
               <button
@@ -237,6 +330,35 @@ export default function Assessment() {
       </div>
     </div>
   );
+}
+
+// Função para ler assessment local
+function readLocalAssessment() {
+  try {
+    const raw = localStorage.getItem("lb_assessment");
+    if (!raw) return null;
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    return arr[arr.length - 1];
+  } catch {
+    return null;
+  }
+}
+
+// Função para formatar data
+function formatDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return dateString;
+  }
 }
 
 function DimensionCard({

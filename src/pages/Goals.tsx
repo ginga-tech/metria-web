@@ -1,5 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import UserMenu from "../components/UserMenu";
+import { useUser } from "../hooks/useUser";
 
 /**
  * Metas Semanais (MVP)
@@ -23,6 +25,7 @@ function getWeekId(d = new Date()) {
 
 export default function Goals() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [text, setText] = useState("");
   const [state, setState] = useState<GoalsState>(() => {
     const cur = getWeekId();
@@ -81,11 +84,16 @@ export default function Goals() {
       <div className="mx-auto max-w-3xl">
         {/* Header */}
         <header className="mb-4">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-[#41B36E]" />
-            <h1 className="text-2xl sm:text-3xl font-semibold text-[#2F6C92]">Metas Semanais</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-[#41B36E]" />
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-semibold text-[#2F6C92]">Metas Semanais</h1>
+                <p className="text-[#2F6C92]/80 text-sm">Semana {state.weekId} • {stats.done}/{stats.total} concluídas</p>
+              </div>
+            </div>
+            <UserMenu userEmail={user?.email} />
           </div>
-          <p className="text-[#2F6C92]/80 mt-1">Semana {state.weekId} • {stats.done}/{stats.total} concluídas</p>
         </header>
 
         {/* Progresso */}
