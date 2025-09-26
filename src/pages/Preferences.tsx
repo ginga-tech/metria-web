@@ -297,7 +297,7 @@ export default function Preferences() {
                 <button 
                   onClick={save} 
                   disabled={saving || loading}
-                  className="h-12 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white font-semibold px-8 hover:from-[#10B981] hover:to-[#41B36E] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+                  className="h-12 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white font-semibold px-8 hover:from-[#10B981] hover:to-[#41B36E] hover:brightness-110 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {saving ? (
                     <>
@@ -315,7 +315,7 @@ export default function Preferences() {
                 <button 
                   onClick={resetAssessment} 
                   disabled={loading}
-                  className="h-12 rounded-xl border-2 border-[#F96B11] text-[#F96B11] font-semibold px-6 hover:bg-[#F96B11] hover:text-white transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="h-12 rounded-xl border-2 border-[#F96B11] text-[#F96B11] font-semibold px-6 hover:bg-[#F96B11] hover:text-white hover:brightness-110 transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>🔄</span>
                   Redefinir Avaliação
@@ -323,7 +323,7 @@ export default function Preferences() {
                 
                 <button 
                   onClick={() => navigate(-1)} 
-                  className="h-12 rounded-xl border-2 border-gray-300 text-gray-600 font-medium px-6 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2"
+                  className="h-12 rounded-xl border-2 border-gray-300 text-gray-600 font-medium px-6 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>←</span>
                   Voltar

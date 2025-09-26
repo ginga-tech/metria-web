@@ -362,7 +362,7 @@ export default function Goals() {
                   state.currentPeriod === key
                     ? 'border-[#41B36E] bg-[#41B36E]/10'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                }`}
+                } cursor-pointer hover:shadow-sm`}
               >
                 <span className="text-2xl">{info.icon}</span>
                 <span className={`text-sm font-medium ${
@@ -403,7 +403,7 @@ export default function Goals() {
                 <button
                   onClick={applyCustomPeriod}
                   disabled={!customStartDate || !customEndDate}
-                  className="px-4 py-2 rounded-lg bg-[#41B36E] text-white font-medium hover:brightness-95 disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-[#41B36E] text-white font-medium hover:brightness-110 disabled:opacity-50 cursor-pointer"
                 >
                   Definir período
                 </button>
@@ -452,7 +452,7 @@ export default function Goals() {
                 <button 
                   onClick={clearCompleted}
                   disabled={stats.done === 0}
-                  className="w-full h-10 rounded-xl border-2 border-[#41B36E] text-[#41B36E] hover:bg-[#41B36E] hover:text-white transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-10 rounded-xl border-2 border-[#41B36E] text-[#41B36E] hover:bg-[#41B36E] hover:text-white hover:brightness-110 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Limpar Concluídas
                 </button>
@@ -460,14 +460,14 @@ export default function Goals() {
                 <button 
                   onClick={resetPeriod}
                   disabled={stats.total === 0}
-                  className="w-full h-10 rounded-xl border-2 border-[#F96B11] text-[#F96B11] hover:bg-[#F96B11] hover:text-white transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-10 rounded-xl border-2 border-[#F96B11] text-[#F96B11] hover:bg-[#F96B11] hover:text-white hover:brightness-110 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Reiniciar Período
                 </button>
                 
                 <button 
                   onClick={() => navigate('/dashboard')}
-                  className="w-full h-10 rounded-xl bg-gradient-to-r from-[#2F6C92] to-[#1E5A7A] text-white hover:from-[#1E5A7A] hover:to-[#2F6C92] transition-all duration-200 font-medium"
+                  className="w-full h-10 rounded-xl bg-gradient-to-r from-[#2F6C92] to-[#1E5A7A] text-white hover:from-[#1E5A7A] hover:to-[#2F6C92] hover:brightness-110 transition-all duration-200 font-medium cursor-pointer"
                 >
                   ← Voltar ao Dashboard
                 </button>
@@ -504,7 +504,7 @@ export default function Goals() {
                 <button
                   onClick={addGoal}
                   disabled={!text.trim() || !category}
-                  className="h-12 px-6 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white font-semibold hover:from-[#10B981] hover:to-[#41B36E] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  className="h-12 px-6 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white font-semibold hover:from-[#10B981] hover:to-[#41B36E] hover:brightness-110 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg cursor-pointer"
                 >
                   Adicionar
                 </button>
@@ -567,7 +567,7 @@ export default function Goals() {
                       </div>
                       <button
                         onClick={() => remove(goal.id)}
-                        className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50"
+                        className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 cursor-pointer"
                         aria-label="Remover meta"
                       >
                         🗑️

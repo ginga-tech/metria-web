@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import UserMenu from "../components/UserMenu";
+import TipsModal from "../components/TipsModal";
 import { useUser } from "../hooks/useUser";
 
 type Scores = Record<string, number>;
@@ -102,6 +103,9 @@ export default function DashboardReordered() {
   const [data, setData] = useState<AssessmentDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tipsOpen, setTipsOpen] = useState(false);
+  const [selectedTitle, setSelectedTitle] = useState("");
+  const [selectedTips, setSelectedTips] = useState<string[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -280,7 +284,20 @@ export default function DashboardReordered() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {DIMENSIONS.map((dimension) => (
-                  <div key={dimension.key} className="p-4 rounded-xl border border-gray-200 hover:border-[#41B36E] transition-colors duration-200">
+                  <div key={dimension.key} className="relative p-4 rounded-xl border border-gray-200 hover:border-[#41B36E] transition-colors duration-200">
+                    <button
+                      aria-label={`Dicas de metas para ${dimension.label}`}
+                      title={`Dicas de metas para ${dimension.label}`}
+                      onClick={() => {
+                        const tips = (SUGGESTIONS as any)[dimension.key] as string[] | undefined;
+                        setSelectedTitle(`Dicas de metas: ${dimension.label}`);
+                        setSelectedTips(tips && tips.length >= 3 ? tips : []);
+                        setTipsOpen(true);
+                      }}
+                      className="absolute bottom-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white hover:from-[#10B981] hover:to-[#41B36E] shadow-lg cursor-pointer"
+                    >
+                      +
+                    </button>
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
                         <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style={{ backgroundColor: `${dimension.color}15` }}>
@@ -418,10 +435,19 @@ export default function DashboardReordered() {
           aria-label="Adicionar nova meta"
           onClick={() => navigate('/goals')}
           className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-[#41B36E] text-white text-3xl leading-none shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-          title="Adicionar nova meta"
+          title="Definir Metas"
         >
           +
         </button>
+
+        {/* Modal de Dicas de Metas */}
+        <TipsModal
+          isOpen={tipsOpen}
+          onClose={() => setTipsOpen(false)}
+          title={selectedTitle}
+          tips={selectedTips}
+          onGoToGoals={() => { setTipsOpen(false); navigate('/goals'); }}
+        />
       </div>
     </div>
   );
