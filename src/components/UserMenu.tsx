@@ -44,6 +44,11 @@ export default function UserMenu({ userEmail }: UserMenuProps) {
     setIsOpen(false);
   };
 
+  const handleGoToGoals = () => {
+    navigate('/goals');
+    setIsOpen(false);
+  };
+
   // Pega as iniciais do email para o avatar
   const getInitials = (email: string) => {
     if (!email) return 'U';
@@ -76,6 +81,17 @@ export default function UserMenu({ userEmail }: UserMenuProps) {
 
           {/* Menu Items */}
           <div className="py-1">
+            <button
+              onClick={handleGoToGoals}
+              className="w-full px-4 py-2 text-left text-sm text-[#2F6C92] hover:bg-[#F3F4F6] flex items-center gap-3"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                <circle cx="12" cy="12" r="3" strokeWidth={2} />
+              </svg>
+              Definir Metas
+            </button>
+
             <button
               onClick={handleEditAssessment}
               className="w-full px-4 py-2 text-left text-sm text-[#2F6C92] hover:bg-[#F3F4F6] flex items-center gap-3"

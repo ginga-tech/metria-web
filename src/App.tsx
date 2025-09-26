@@ -1,7 +1,7 @@
 import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
 import LifeBalanceAuth from "./pages/LifeBalanceAuth";
 import Assessment from "./pages/Assessment";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/DashboardReordered";
 import Preferences from "./pages/Preferences";
 import Goals from "./pages/Goals";
 import OAuthCallback from "./pages/OAuthCallback";

@@ -12,14 +12,6 @@ import {
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
 
-/**
- * LifeBalance – Dashboard Melhorado
- * - Design moderno com cards informativos
- * - Múltiplas visualizações dos dados
- * - Sugestões personalizadas
- * - Estatísticas e progresso
- */
-
 type Scores = Record<string, number>;
 
 interface AssessmentDto {
@@ -29,13 +21,13 @@ interface AssessmentDto {
 }
 
 const DIMENSIONS: { key: keyof Scores; label: string; icon: string; color: string }[] = [
-  { key: "saude", label: "Saúde", icon: "💪", color: "#41B36E" },
-  { key: "conhecimento", label: "Conhecimento", icon: "🧠", color: "#2F6C92" },
+  { key: "saude", label: "Saúde", icon: "🫀", color: "#41B36E" },
+  { key: "conhecimento", label: "Conhecimento", icon: "📚", color: "#2F6C92" },
   { key: "disciplina", label: "Disciplina e Foco", icon: "🎯", color: "#F96B11" },
   { key: "cultura", label: "Cultura Geral", icon: "🎭", color: "#8B5CF6" },
-  { key: "leitura", label: "Leitura", icon: "📚", color: "#06B6D4" },
-  { key: "inteligenciaEmocional", label: "Inteligência Emocional", icon: "❤️", color: "#EF4444" },
-  { key: "relacionamentos", label: "Relacionamentos", icon: "👥", color: "#10B981" },
+  { key: "leitura", label: "Leitura", icon: "📖", color: "#06B6D4" },
+  { key: "inteligenciaEmocional", label: "Inteligência Emocional", icon: "🧠", color: "#EF4444" },
+  { key: "relacionamentos", label: "Relacionamentos", icon: "🤝", color: "#10B981" },
   { key: "maturidadeProfissional", label: "Maturidade Profissional", icon: "💼", color: "#6366F1" },
   { key: "visaoDeMundo", label: "Visão de Mundo", icon: "🌍", color: "#F59E0B" },
   { key: "dominioFinanceiro", label: "Domínio Financeiro", icon: "💰", color: "#059669" },
@@ -104,7 +96,7 @@ const SUGGESTIONS = {
   ]
 };
 
-export default function Dashboard() {
+export default function DashboardReordered() {
   const navigate = useNavigate();
   const { user } = useUser();
   const [data, setData] = useState<AssessmentDto | null>(null);
@@ -173,25 +165,6 @@ export default function Dashboard() {
       .slice(0, 3);
   }, [data]);
 
-  const personalizedSuggestions = useMemo(() => {
-    if (!data?.scores) return [];
-    const suggestions: Array<{ area: string; suggestion: string; icon: string }> = [];
-    
-    weaknesses.forEach(weakness => {
-      const areaSuggestions = SUGGESTIONS[weakness.key as keyof typeof SUGGESTIONS];
-      if (areaSuggestions && areaSuggestions.length > 0) {
-        const randomSuggestion = areaSuggestions[Math.floor(Math.random() * areaSuggestions.length)];
-        suggestions.push({
-          area: weakness.label,
-          suggestion: randomSuggestion,
-          icon: weakness.icon
-        });
-      }
-    });
-    
-    return suggestions;
-  }, [weaknesses]);
-
   const overallScore = useMemo(() => {
     if (!data?.average) return 0;
     return Math.round(data.average * 10) / 10;
@@ -200,12 +173,12 @@ export default function Dashboard() {
   const scoreLevel = useMemo(() => {
     if (overallScore >= 4.5) return { label: "Excelente", color: "#10B981", emoji: "🌟" };
     if (overallScore >= 3.5) return { label: "Bom", color: "#41B36E", emoji: "👍" };
-    if (overallScore >= 2.5) return { label: "Regular", color: "#F59E0B", emoji: "⚠️" };
-    return { label: "Precisa melhorar", color: "#EF4444", emoji: "🎯" };
+    if (overallScore >= 2.5) return { label: "Regular", color: "#F59E0B", emoji: "🟡" };
+    return { label: "Precisa melhorar", color: "#EF4444", emoji: "⚠️" };
   }, [overallScore]);
 
   const when = useMemo(() => {
-    if (!data?.createdAtUtc) return "—";
+    if (!data?.createdAtUtc) return "";
     try {
       const d = new Date(data.createdAtUtc);
       return d.toLocaleDateString('pt-BR', { 
@@ -235,8 +208,7 @@ export default function Dashboard() {
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Dashboard</h1>
                 <p className="text-[#2F6C92]/70 text-sm">
-                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>! 
-                  Última avaliação em <span className="font-medium text-[#2F6C92]">{when}</span>
+                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>! Última avaliação em <span className="font-medium text-[#2F6C92]">{when}</span>
                 </p>
               </div>
             </div>
@@ -275,7 +247,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Pontos Fortes</p>
                 <p className="text-3xl font-bold text-[#41B36E]">{strengths.length}</p>
-                <p className="text-sm text-[#41B36E]">💪 Áreas desenvolvidas</p>
+                <p className="text-sm text-[#41B36E]">✅ Áreas desenvolvidas</p>
               </div>
               <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[#41B36E] to-[#10B981] flex items-center justify-center">
                 <span className="text-white text-2xl">🏆</span>
@@ -288,60 +260,121 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Oportunidades</p>
                 <p className="text-3xl font-bold text-[#F96B11]">{weaknesses.length}</p>
-                <p className="text-sm text-[#F96B11]">🎯 Para melhorar</p>
+                <p className="text-sm text-[#F96B11]">⚠️ Para melhorar</p>
               </div>
               <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[#F96B11] to-[#F59E0B] flex items-center justify-center">
-                <span className="text-white text-2xl">🚀</span>
+                <span className="text-white text-2xl">🛠️</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Grid principal */}
+        {/* Grid principal reordenado */}
         <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Radar Chart */}
-          <div className="xl:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#2F6C92]">Radar de Equilíbrio</h2>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span className="w-3 h-3 rounded-full bg-[#41B36E]"></span>
-                <span>Sua pontuação</span>
+          {/* Esquerda (2 colunas): Entenda as 10 Dimensões */}
+          <div className="xl:col-span-2">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h2 className="text-2xl font-bold text-[#2F6C92] mb-6 flex items-center gap-3">
+                <span className="text-3xl">🧭</span>
+                Entenda as 10 Dimensões do Equilíbrio
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {DIMENSIONS.map((dimension) => (
+                  <div key={dimension.key} className="p-4 rounded-xl border border-gray-200 hover:border-[#41B36E] transition-colors duration-200">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style={{ backgroundColor: `${dimension.color}15` }}>
+                          {dimension.icon}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-[#2F6C92] mb-2">{dimension.label}</h3>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {getCategoryDescription(dimension.key as keyof typeof SUGGESTIONS)}
+                        </p>
+                        {data?.scores && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <span className="text-xs font-medium text-gray-600">Sua pontuação:</span>
+                            <span 
+                              className="px-2 py-1 rounded-full text-xs font-bold text-white"
+                              style={{ backgroundColor: getScoreColor(data.scores[dimension.key] ?? 0) }}
+                            >
+                              {clampScore(data.scores[dimension.key] ?? 0)}/5
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={chartData} outerRadius={150}>
-                  <PolarGrid gridType="polygon" />
-                  <PolarAngleAxis dataKey="dimension" tick={{ fill: "#2F6C92", fontSize: 11 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fill: "#6B7280", fontSize: 10 }} />
-                  <Tooltip 
-                    formatter={(value) => [`${value}/5`, 'Pontuação']}
-                    labelStyle={{ color: '#2F6C92' }}
-                  />
-                  <Radar 
-                    name="Pontuação" 
-                    dataKey="score" 
-                    stroke="#2F6C92" 
-                    fill="#41B36E" 
-                    fillOpacity={0.3}
-                    strokeWidth={2}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Insights e Ações */}
+          {/* Direita: Radar + Ações Rápidas (com Análise Rápida) */}
           <div className="space-y-6">
-            {/* Pontos Fortes e Fracos */}
+            {/* Radar de Equilíbrio */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h2 className="text-xl font-bold text-[#2F6C92] mb-4">Análise Rápida</h2>
-              
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-[#2F6C92]">Radar de Equilíbrio</h2>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span className="w-3 h-3 rounded-full bg-[#41B36E]"></span>
+                  <span>Sua pontuação</span>
+                </div>
+              </div>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={chartData} outerRadius={150}>
+                    <PolarGrid gridType="polygon" />
+                    <PolarAngleAxis dataKey="dimension" tick={{ fill: "#2F6C92", fontSize: 11 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fill: "#6B7280", fontSize: 10 }} />
+                    <Tooltip 
+                      formatter={(value) => [`${value}/5`, 'Pontuação']}
+                      labelStyle={{ color: '#2F6C92' }}
+                    />
+                    <Radar 
+                      name="Pontuação" 
+                      dataKey="score" 
+                      stroke="#2F6C92" 
+                      fill="#41B36E" 
+                      fillOpacity={0.3}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Ações Rápidas + Análise Rápida */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h2 className="text-xl font-bold text-[#2F6C92] mb-4">Ações Rápidas</h2>
+              <div className="space-y-3 mb-4">
+                <button 
+                  onClick={() => {
+                    sessionStorage.setItem('editAssessment', 'true');
+                    navigate("/assessment");
+                  }}
+                  className="w-full h-12 rounded-xl bg-[#2F6C92] text-white hover:bg-[#1E5A7A] transition-colors duration-200 font-medium flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>🧭</span>
+                  Refazer Avaliação
+                </button>
+                
+                <button 
+                  onClick={() => navigate("/goals")}
+                  className="w-full h-12 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white hover:from-[#10B981] hover:to-[#41B36E] hover:brightness-110 transition-all duration-200 font-medium flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <span>🎯</span>
+                  Definir Metas
+                </button>
+              </div>
+
               <div className="space-y-4">
+                <h3 className="text-lg font-bold text-[#2F6C92]">Análise Rápida</h3>
                 <div>
-                  <h3 className="text-sm font-semibold text-[#41B36E] mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-semibold text-[#41B36E] mb-3 flex items-center gap-2">
                     <span>🏆</span> Seus pontos fortes
-                  </h3>
+                  </h4>
                   <div className="space-y-2">
                     {strengths.map((s) => (
                       <div key={s.key} className="flex items-center justify-between p-2 rounded-lg bg-[#41B36E]/5">
@@ -358,9 +391,9 @@ export default function Dashboard() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-[#F96B11] mb-3 flex items-center gap-2">
-                    <span>🎯</span> Focar nestas áreas
-                  </h3>
+                  <h4 className="text-sm font-semibold text-[#F96B11] mb-3 flex items-center gap-2">
+                    <span>⚠️</span> Focar nestas áreas
+                  </h4>
                   <div className="space-y-2">
                     {weaknesses.map((w) => (
                       <div key={w.key} className="flex items-center justify-between p-2 rounded-lg bg-[#F96B11]/5">
@@ -377,94 +410,18 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-
-            {/* Ações Rápidas */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h2 className="text-xl font-bold text-[#2F6C92] mb-4">Ações Rápidas</h2>
-              <div className="space-y-3">
-                <button 
-                  onClick={() => {
-                    sessionStorage.setItem('editAssessment', 'true');
-                    navigate("/assessment");
-                  }}
-                  className="w-full h-12 rounded-xl bg-[#2F6C92] text-white hover:bg-[#1E5A7A] transition-colors duration-200 font-medium flex items-center justify-center gap-2"
-                >
-                  <span>📊</span>
-                  Refazer Avaliação
-                </button>
-                
-                <button 
-                  onClick={() => navigate("/goals")}
-                  className="w-full h-12 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white hover:from-[#10B981] hover:to-[#41B36E] hover:brightness-110 transition-all duration-200 font-medium flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-                >
-                  <span>🎯</span>
-                  Definir Metas
-                </button>
-              </div>
-            </div>
-
-            {/* Sugestões Personalizadas */}
-            {personalizedSuggestions.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <h2 className="text-xl font-bold text-[#2F6C92] mb-4">💡 Sugestões para Você</h2>
-                <div className="space-y-3">
-                  {personalizedSuggestions.map((suggestion, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-gradient-to-r from-[#F3F4F6] to-[#E5E7EB] border-l-4 border-[#41B36E]">
-                      <div className="flex items-start gap-2">
-                        <span className="text-lg">{suggestion.icon}</span>
-                        <div>
-                          <p className="text-sm font-semibold text-[#2F6C92]">{suggestion.area}</p>
-                          <p className="text-sm text-gray-700 mt-1">{suggestion.suggestion}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </section>
 
-        {/* Seção de Descrições das Categorias */}
-        <section className="mt-8">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h2 className="text-2xl font-bold text-[#2F6C92] mb-6 flex items-center gap-3">
-              <span className="text-3xl">📋</span>
-              Entenda as 10 Dimensões do Equilíbrio
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {DIMENSIONS.map((dimension) => (
-                <div key={dimension.key} className="p-4 rounded-xl border border-gray-200 hover:border-[#41B36E] transition-colors duration-200">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style={{ backgroundColor: `${dimension.color}15` }}>
-                        {dimension.icon}
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-[#2F6C92] mb-2">{dimension.label}</h3>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        {getCategoryDescription(dimension.key as keyof typeof SUGGESTIONS)}
-                      </p>
-                      {data?.scores && (
-                        <div className="mt-3 flex items-center gap-2">
-                          <span className="text-xs font-medium text-gray-600">Sua pontuação:</span>
-                          <span 
-                            className="px-2 py-1 rounded-full text-xs font-bold text-white"
-                            style={{ backgroundColor: getScoreColor(data.scores[dimension.key] ?? 0) }}
-                          >
-                            {clampScore(data.scores[dimension.key] ?? 0)}/5
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* Botão flutuante para nova meta */}
+        <button
+          aria-label="Adicionar nova meta"
+          onClick={() => navigate('/goals')}
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-[#41B36E] text-white text-3xl leading-none shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+          title="Adicionar nova meta"
+        >
+          +
+        </button>
       </div>
     </div>
   );
