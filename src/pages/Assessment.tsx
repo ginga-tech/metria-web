@@ -2,6 +2,8 @@ import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import lifeBalanceLogo from "../assets/lifebalance-logo.svg";
 import "../styles/slider.css";
+import UserMenu from "../components/UserMenu";
+import { useUser } from "../hooks/useUser";
 
 /**
  * LifeBalance – Autoavaliação (10 dimensões)
@@ -77,6 +79,7 @@ const DIMENSIONS: { key: DimensionKey; label: string; tooltip: string }[] = [
 
 export default function Assessment() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [values, setValues] = useState<Record<DimensionKey, number>>(() => {
     const v: Record<DimensionKey, number> = Object.create(null);
     DIMENSIONS.forEach((d) => (v[d.key] = 3)); // default inicial = 3
@@ -213,8 +216,28 @@ export default function Assessment() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-      <div className="w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="min-h-screen bg-[#F3F4F6] p-4">
+      {/* Header com UserMenu */}
+      <header className="w-full max-w-[1200px] mx-auto mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center">
+              <span className="text-white text-lg">📊</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-[#2F6C92]">
+                {isEditing ? "Editar Assessment" : "Novo Assessment"}
+              </h1>
+              <p className="text-sm text-[#2F6C92]/70">
+                Olá, <span className="font-medium">{user?.email?.split('@')[0] || 'Usuário'}</span>!
+              </p>
+            </div>
+          </div>
+          <UserMenu userEmail={user?.email} />
+        </div>
+      </header>
+
+      <div className="w-full max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Seção esquerda - Informações */}
         <section className="relative overflow-hidden rounded-2xl shadow-xl bg-white flex items-center justify-center p-10 order-2 lg:order-1">
           <div className="absolute inset-0 bg-white" />

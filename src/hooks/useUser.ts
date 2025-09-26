@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 interface UserInfo {
   email: string;
+  name?: string;
 }
 
 export function useUser() {
@@ -26,7 +27,10 @@ export function useUser() {
 
         if (response.ok) {
           const userData = await response.json();
-          setUser({ email: userData.email });
+          setUser({ 
+            email: userData.email,
+            name: userData.name 
+          });
         } else {
           // Token inválido, remove do localStorage
           localStorage.removeItem('lb_token');

@@ -1,20 +1,34 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
+export type GoalPeriod = 'weekly' | 'monthly' | 'quarterly' | 'semiannual' | 'annual' | 'custom';
+
 export interface Goal {
   id: string;
   text: string;
   done: boolean;
-  weekId: string;
+  period: string;
+  startDate: string;
+  endDate: string;
+  category?: string;
   createdAtUtc: string;
 }
 
 export interface CreateGoalRequest {
   text: string;
-  weekId: string;
+  period: GoalPeriod;
+  startDate: string;
+  endDate: string;
+  category?: string;
 }
 
 export interface UpdateGoalRequest {
   done: boolean;
+}
+
+export interface GetGoalsParams {
+  period?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 function getAuthHeaders(): HeadersInit {
@@ -26,10 +40,19 @@ function getAuthHeaders(): HeadersInit {
 }
 
 export async function createGoal(request: CreateGoalRequest): Promise<Goal> {
+  // Convert frontend period to backend enum format and format dates properly
+  const backendRequest = {
+    text: request.text,
+    period: capitalizeFirst(request.period),
+    startDate: new Date(request.startDate).toISOString(),
+    endDate: new Date(request.endDate).toISOString(),
+    category: request.category
+  };
+
   const response = await fetch(`${API_BASE}/api/goals`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify(request),
+    body: JSON.stringify(backendRequest),
   });
 
   if (!response.ok) {
@@ -40,15 +63,29 @@ export async function createGoal(request: CreateGoalRequest): Promise<Goal> {
   return response.json();
 }
 
-export async function getGoalsByWeek(weekId: string): Promise<Goal[]> {
-  const response = await fetch(`${API_BASE}/api/goals/week/${encodeURIComponent(weekId)}`, {
+export async function getGoals(params?: GetGoalsParams): Promise<Goal[]> {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.period) {
+    searchParams.append('period', capitalizeFirst(params.period));
+  }
+  if (params?.startDate) {
+    searchParams.append('startDate', params.startDate);
+  }
+  if (params?.endDate) {
+    searchParams.append('endDate', params.endDate);
+  }
+
+  const url = `${API_BASE}/api/goals${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      return []; // Nenhuma meta encontrada para esta semana
+      return []; // Nenhuma meta encontrada
     }
     const error = await response.text();
     throw new Error(error || `Erro ${response.status} ao buscar metas`);
@@ -84,7 +121,59 @@ export async function deleteGoal(id: string): Promise<void> {
   }
 }
 
-// Função utilitária para calcular o ID da semana (ISO week)
+// Utility functions
+function capitalizeFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function getPeriodDates(period: GoalPeriod, customEndDate?: string): { start: string; end: string; label: string } {
+  const now = new Date();
+  const start = new Date(now);
+  let end = new Date(now);
+  
+  switch (period) {
+    case 'weekly':
+      const dayOfWeek = now.getDay();
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      start.setDate(now.getDate() - daysToMonday);
+      end.setDate(start.getDate() + 6);
+      break;
+    case 'monthly':
+      start.setDate(1);
+      end.setMonth(start.getMonth() + 1);
+      end.setDate(0);
+      break;
+    case 'quarterly':
+      const quarter = Math.floor(now.getMonth() / 3);
+      start.setMonth(quarter * 3, 1);
+      end.setMonth(quarter * 3 + 3, 0);
+      break;
+    case 'semiannual':
+      const semester = now.getMonth() < 6 ? 0 : 1;
+      start.setMonth(semester * 6, 1);
+      end.setMonth(semester * 6 + 6, 0);
+      break;
+    case 'annual':
+      start.setMonth(0, 1);
+      end.setMonth(11, 31);
+      break;
+    case 'custom':
+      if (customEndDate) {
+        end = new Date(customEndDate);
+      } else {
+        end.setFullYear(end.getFullYear() + 1);
+      }
+      break;
+  }
+  
+  const startStr = start.toISOString().split('T')[0];
+  const endStr = end.toISOString().split('T')[0];
+  const label = `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`;
+  
+  return { start: startStr, end: endStr, label };
+}
+
+// Legacy function for backward compatibility (if needed)
 export function getWeekId(date = new Date()): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7; // 1..7 (Mon..Sun)
