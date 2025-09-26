@@ -235,7 +235,7 @@ export default function Dashboard() {
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Dashboard</h1>
                 <p className="text-[#2F6C92]/70 text-sm">
-                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.email?.split('@')[0] || 'Usuário'}</span>! 
+                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>! 
                   Última avaliação em <span className="font-medium text-[#2F6C92]">{when}</span>
                 </p>
               </div>
@@ -424,6 +424,47 @@ export default function Dashboard() {
             )}
           </div>
         </section>
+
+        {/* Seção de Descrições das Categorias */}
+        <section className="mt-8">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h2 className="text-2xl font-bold text-[#2F6C92] mb-6 flex items-center gap-3">
+              <span className="text-3xl">📋</span>
+              Entenda as 10 Dimensões do Equilíbrio
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {DIMENSIONS.map((dimension) => (
+                <div key={dimension.key} className="p-4 rounded-xl border border-gray-200 hover:border-[#41B36E] transition-colors duration-200">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style={{ backgroundColor: `${dimension.color}15` }}>
+                        {dimension.icon}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-[#2F6C92] mb-2">{dimension.label}</h3>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {getCategoryDescription(dimension.key as keyof typeof SUGGESTIONS)}
+                      </p>
+                      {data?.scores && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-600">Sua pontuação:</span>
+                          <span 
+                            className="px-2 py-1 rounded-full text-xs font-bold text-white"
+                            style={{ backgroundColor: getScoreColor(data.scores[dimension.key] ?? 0) }}
+                          >
+                            {clampScore(data.scores[dimension.key] ?? 0)}/5
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -442,6 +483,44 @@ function Loading() {
       </div>
     </div>
   );
+}
+
+function getCategoryDescription(key: keyof typeof SUGGESTIONS): string {
+  const descriptions = {
+    saude: "Engloba seu bem-estar físico e mental. Inclui exercícios regulares, alimentação equilibrada, qualidade do sono, gestão do estresse e cuidados preventivos com a saúde. Uma base sólida para todas as outras dimensões da vida.",
+    
+    conhecimento: "Refere-se ao desenvolvimento contínuo de habilidades técnicas e conhecimentos específicos da sua área de atuação. Inclui aprendizado formal, certificações, cursos e atualização profissional constante.",
+    
+    disciplina: "Capacidade de manter foco, consistência e autocontrole para alcançar objetivos. Envolve gestão do tempo, eliminação de distrações, criação de rotinas produtivas e perseverança diante dos desafios.",
+    
+    cultura: "Exposição e apreciação às artes, história, tradições e manifestações culturais diversas. Inclui visitas a museus, teatro, cinema, música, literatura e participação em eventos culturais que ampliam sua perspectiva.",
+    
+    leitura: "Hábito regular de leitura que expande vocabulário, conhecimento e capacidade de reflexão. Abrange diferentes gêneros literários, livros técnicos, artigos e publicações que contribuem para o crescimento pessoal e profissional.",
+    
+    inteligenciaEmocional: "Habilidade de reconhecer, compreender e gerenciar suas próprias emoções e as dos outros. Inclui autoconhecimento, empatia, comunicação eficaz, resolução de conflitos e resiliência emocional.",
+    
+    relacionamentos: "Qualidade das conexões pessoais e profissionais. Envolve família, amigos, colegas de trabalho, networking, comunicação assertiva, confiança mútua e capacidade de construir vínculos saudáveis e duradouros.",
+    
+    maturidadeProfissional: "Desenvolvimento de competências comportamentais no ambiente de trabalho. Inclui liderança, trabalho em equipe, ética profissional, adaptabilidade, pensamento estratégico e capacidade de tomar decisões assertivas.",
+    
+    visaoDeMundo: "Compreensão ampla sobre questões globais, diversidade cultural, política, economia e sociedade. Envolve pensamento crítico, abertura a diferentes perspectivas e consciência sobre seu papel como cidadão global.",
+    
+    dominioFinanceiro: "Gestão eficiente dos recursos financeiros pessoais. Inclui planejamento orçamentário, controle de gastos, investimentos, educação financeira, construção de patrimônio e preparação para o futuro financeiro."
+  };
+  
+  return descriptions[key] || "Descrição não disponível.";
+}
+
+function getScoreColor(score: number): string {
+  const roundedScore = Math.round(score);
+  switch (roundedScore) {
+    case 1: return "#EF4444"; // Vermelho
+    case 2: return "#F97316"; // Laranja
+    case 3: return "#EAB308"; // Amarelo
+    case 4: return "#3B82F6"; // Azul
+    case 5: return "#22C55E"; // Verde
+    default: return "#6B7280"; // Cinza para scores 0 ou inválidos
+  }
 }
 
 function clampScore(n: number) {

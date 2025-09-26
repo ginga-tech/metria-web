@@ -424,6 +424,16 @@ export default function LifeBalanceAuth() {
               </a>
               .
             </p>
+
+            {/* Atalho para Goals - apenas para desenvolvimento */}
+            <div className="mt-4 pt-4 border-t border-[#2F6C92]/10">
+              <button
+                onClick={() => navigate('/goals')}
+                className="w-full text-xs text-[#2F6C92]/60 hover:text-[#F96B11] hover:underline transition-colors py-2"
+              >
+                🎯 Acesso direto às Metas (Dev)
+              </button>
+            </div>
           </div>
         </section>
       </div>
