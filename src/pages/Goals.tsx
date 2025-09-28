@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
 import { createGoal, updateGoal, deleteGoal, getGoals } from "../services/goalsService";
+import UpgradeModal from "../components/UpgradeModal";
+import { getSubscriptionStatus, createCheckoutSession, getPaymentLinkUrl } from "../services/billingService";
 import { GOAL_CATEGORIES as SHARED_GOAL_CATEGORIES } from "../constants/assessment";
 
 /**
@@ -123,6 +125,8 @@ export default function Goals() {
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("");
+  const [subscriptionActive, setSubscriptionActive] = useState<boolean>(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   
   const [state, setState] = useState<GoalsState>(() => {
     try {
@@ -179,6 +183,18 @@ export default function Goals() {
         setState((s) => ({ ...s, items: mapped }));
       } catch (err) {
         console.error('Erro ao carregar metas:', err);
+      }
+    })();
+  }, []);
+
+  // Carrega status de assinatura
+  useEffect(() => {
+    (async () => {
+      try {
+        const info = await getSubscriptionStatus();
+        setSubscriptionActive(!!info.active);
+      } catch {
+        setSubscriptionActive(false);
       }
     })();
   }, []);
@@ -243,7 +259,14 @@ export default function Goals() {
       alert('Selecione uma categoria do Assessment para vincular sua meta.');
       return;
     }
-    
+    // Paywall simples: limite de 5 metas no plano gratuito (conta total)
+    const FREE_LIMIT = 5;
+    const totalGoals = state.items.length;
+    if (!subscriptionActive && totalGoals >= FREE_LIMIT) {
+      setShowUpgrade(true);
+      return;
+    }
+
     try {
       if (state.currentPeriod === 'custom' && (!state.customStartDate || !state.customEndDate)) {
         alert('Defina a data inicial e final para metas personalizadas.');
@@ -580,6 +603,50 @@ export default function Goals() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Modal (paywall) */}
+      <UpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        onChooseMonthly={async () => {
+          try {
+            const link = getPaymentLinkUrl();
+            if (link) {
+              window.location.href = link; // Payment Link com ambos planos
+              return;
+            }
+            const priceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY as string | undefined;
+            if (!priceId) {
+              alert('Preço mensal não configurado. Defina VITE_STRIPE_PRICE_MONTHLY ou VITE_STRIPE_PAYMENT_LINK_URL.');
+              return;
+            }
+            const { url } = await createCheckoutSession(priceId);
+            window.location.href = url;
+          } catch (e: any) {
+            alert(e?.message || 'Falha ao iniciar checkout mensal');
+          }
+        }}
+        onChooseAnnual={async () => {
+          try {
+            const link = getPaymentLinkUrl();
+            if (link) {
+              window.location.href = link; // Payment Link com ambos planos
+              return;
+            }
+            const priceId = import.meta.env.VITE_STRIPE_PRICE_ANNUAL as string | undefined;
+            if (!priceId) {
+              alert('Preço anual não configurado. Defina VITE_STRIPE_PRICE_ANNUAL ou VITE_STRIPE_PAYMENT_LINK_URL.');
+              return;
+            }
+            const { url } = await createCheckoutSession(priceId);
+            window.location.href = url;
+          } catch (e: any) {
+            alert(e?.message || 'Falha ao iniciar checkout anual');
+          }
+        }}
+        monthlyPriceLabel="R$ 14,90/mês"
+        annualPriceLabel="R$ 11,90/mês (cobrança anual)"
+      />
     </div>
   );
 }

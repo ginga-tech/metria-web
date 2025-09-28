@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { createCustomerPortal } from "../services/billingService";
 
 interface UserMenuProps {
   userEmail?: string;
@@ -44,6 +45,15 @@ export default function UserMenu({ userEmail }: UserMenuProps) {
     setIsOpen(false);
   };
 
+  const handleManageSubscription = async () => {
+    try {
+      const { url } = await createCustomerPortal();
+      window.location.href = url;
+    } catch (e: any) {
+      alert(e?.message || 'Não foi possível abrir o portal de assinatura.');
+    }
+  };
+
   const handleGoToGoals = () => {
     navigate('/goals');
     setIsOpen(false);
@@ -81,6 +91,15 @@ export default function UserMenu({ userEmail }: UserMenuProps) {
 
           {/* Menu Items */}
           <div className="py-1">
+            <button
+              onClick={handleManageSubscription}
+              className="w-full px-4 py-2 text-left text-sm text-[#2F6C92] hover:bg-[#F3F4F6] flex items-center gap-3"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-2.21 0-4 1.79-4 4m8 0a4 4 0 01-4 4m0-8a8 8 0 100 16 8 8 0 000-16z" />
+              </svg>
+              Gerenciar Assinatura
+            </button>
             <button
               onClick={handleGoToGoals}
               className="w-full px-4 py-2 text-left text-sm text-[#2F6C92] hover:bg-[#F3F4F6] flex items-center gap-3"
