@@ -61,3 +61,12 @@ export function getPaymentLinkUrl(): string | undefined {
   // When set, front can redirect directly without creating a Checkout Session
   return import.meta.env.VITE_STRIPE_PAYMENT_LINK_URL as string | undefined;
 }
+
+// Preferred: separate links for each plan
+export function getMonthlyPaymentLinkUrl(): string | undefined {
+  return import.meta.env.VITE_STRIPE_PAYMENT_LINK_URL_MONTHLY as string | undefined;
+}
+
+export function getAnnualPaymentLinkUrl(): string | undefined {
+  return import.meta.env.VITE_STRIPE_PAYMENT_LINK_URL_ANNUAL as string | undefined;
+}

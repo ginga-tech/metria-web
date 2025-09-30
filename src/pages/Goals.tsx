@@ -1,18 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
 import { createGoal, updateGoal, deleteGoal, getGoals } from "../services/goalsService";
 import UpgradeModal from "../components/UpgradeModal";
-import { getSubscriptionStatus, createCheckoutSession, getPaymentLinkUrl } from "../services/billingService";
+import { 
+  getSubscriptionStatus, 
+  createCheckoutSession, 
+  getPaymentLinkUrl,
+  getMonthlyPaymentLinkUrl,
+  getAnnualPaymentLinkUrl
+} from "../services/billingService";
 import { GOAL_CATEGORIES as SHARED_GOAL_CATEGORIES } from "../constants/assessment";
 
 /**
  * Sistema de Metas Completo
- * - Diferentes períodos: semanal, mensal, trimestral, semestral, anual, personalizado
+ * - Diferentes perÃ­odos: semanal, mensal, trimestral, semestral, anual, personalizado
  * - Design moderno similar ao Dashboard
  * - Progresso visual aprimorado
- * - Persistência local em localStorage
+ * - PersistÃªncia local em localStorage
  */
 
 type GoalPeriod = 'weekly' | 'monthly' | 'quarterly' | 'semiannual' | 'annual' | 'custom';
@@ -27,7 +33,7 @@ type Goal = {
   category?: string;
 };
 
-// Categorias baseadas nas dimensões do Assessment
+// Categorias baseadas nas dimensÃµes do Assessment
 
 
 interface GoalsState { 
@@ -39,12 +45,12 @@ interface GoalsState {
 }
 
 const GOAL_PERIODS = {
-  weekly: { label: 'Semanal', icon: '📅', color: '#41B36E' },
-  monthly: { label: 'Mensal', icon: '🗓️', color: '#2F6C92' },
-  quarterly: { label: 'Trimestral', icon: '📊', color: '#8B5CF6' },
-  semiannual: { label: 'Semestral', icon: '📋', color: '#F59E0B' },
-  annual: { label: 'Anual', icon: '🎯', color: '#EF4444' },
-  custom: { label: 'Personalizado', icon: '⚙️', color: '#6B7280' }
+  weekly: { label: 'Semanal', icon: 'ðŸ“…', color: '#41B36E' },
+  monthly: { label: 'Mensal', icon: 'ðŸ—“ï¸', color: '#2F6C92' },
+  quarterly: { label: 'Trimestral', icon: 'ðŸ“Š', color: '#8B5CF6' },
+  semiannual: { label: 'Semestral', icon: 'ðŸ“‹', color: '#F59E0B' },
+  annual: { label: 'Anual', icon: 'ðŸŽ¯', color: '#EF4444' },
+  custom: { label: 'Personalizado', icon: 'âš™ï¸', color: '#6B7280' }
 };
 
 function getPeriodDates(
@@ -127,6 +133,48 @@ export default function Goals() {
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [subscriptionActive, setSubscriptionActive] = useState<boolean>(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
+
+  function openCenteredPopup(url: string, title: string, w = 520, h = 720) {
+    const dualScreenLeft = window.screenLeft ?? window.screenX ?? 0;
+    const dualScreenTop = window.screenTop ?? window.screenY ?? 0;
+    const width = window.innerWidth ?? document.documentElement.clientWidth ?? screen.width;
+    const height = window.innerHeight ?? document.documentElement.clientHeight ?? screen.height;
+    const systemZoom = width / screen.availWidth;
+    const left = (width - w) / 2 / systemZoom + dualScreenLeft;
+    const top = (height - h) / 2 / systemZoom + dualScreenTop;
+    const specs = `scrollbars=yes, width=${w}, height=${h}, top=${top}, left=${left}`;
+    const newWindow = window.open(url, title, specs);
+    if (newWindow && newWindow.focus) newWindow.focus();
+    return newWindow;
+  }
+
+  async function pollSubscriptionUntilActive(popup: Window | null, timeoutMs = 10 * 60 * 1000, intervalMs = 3000) {
+    setIsCheckingSubscription(true);
+    const start = Date.now();
+    return new Promise<void>((resolve) => {
+      const timer = window.setInterval(async () => {
+        const elapsed = Date.now() - start;
+        if (elapsed > timeoutMs || (popup && popup.closed)) {
+          window.clearInterval(timer);
+          setIsCheckingSubscription(false);
+          resolve();
+          return;
+        }
+        try {
+          const info = await getSubscriptionStatus();
+          if (info?.active) {
+            try { if (popup && !popup.closed) popup.close(); } catch {}
+            window.clearInterval(timer);
+            setSubscriptionActive(true);
+            setShowUpgrade(false);
+            setIsCheckingSubscription(false);
+            resolve();
+          }
+        } catch {}
+      }, intervalMs);
+    });
+  }
   
   const [state, setState] = useState<GoalsState>(() => {
     try {
@@ -239,13 +287,13 @@ export default function Goals() {
       return;
     }
     if (start >= end) {
-      alert('A data inicial deve ser anterior à data final.');
+      alert('A data inicial deve ser anterior Ã  data final.');
       return;
     }
     const maxDate = new Date(start);
     maxDate.setFullYear(maxDate.getFullYear() + 5);
     if (end > maxDate) {
-      alert('O período máximo é de 5 anos.');
+      alert('O perÃ­odo mÃ¡ximo Ã© de 5 anos.');
       return;
     }
     setState((s) => ({ ...s, customStartDate: customStartDate, customEndDate: customEndDate }));
@@ -356,12 +404,12 @@ export default function Goals() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center">
-                <span className="text-white text-xl">🎯</span>
+                <span className="text-white text-xl">ðŸŽ¯</span>
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Minhas Metas</h1>
                 <p className="text-[#2F6C92]/70 text-sm">
-                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>! 
+                  OlÃ¡, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'UsuÃ¡rio'}</span>! 
                   Defina e acompanhe suas metas de vida.
                 </p>
               </div>
@@ -370,10 +418,10 @@ export default function Goals() {
           </div>
         </header>
 
-        {/* Seletor de Período */}
+        {/* Seletor de PerÃ­odo */}
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
           <h2 className="text-xl font-bold text-[#2F6C92] mb-4 flex items-center gap-2">
-            <span>📊</span> Período das Metas
+            <span>ðŸ“Š</span> PerÃ­odo das Metas
           </h2>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
@@ -412,7 +460,7 @@ export default function Goals() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-[#2F6C92] mb-2">Data Final (máximo 5 anos)</label>
+                  <label className="block text-sm font-semibold text-[#2F6C92] mb-2">Data Final (mÃ¡ximo 5 anos)</label>
                   <input
                     type="date"
                     value={customEndDate}
@@ -428,7 +476,7 @@ export default function Goals() {
                   disabled={!customStartDate || !customEndDate}
                   className="px-4 py-2 rounded-lg bg-[#41B36E] text-white font-medium hover:brightness-110 disabled:opacity-50 cursor-pointer"
                 >
-                  Definir período
+                  Definir perÃ­odo
                 </button>
               </div>
             </div>
@@ -437,7 +485,7 @@ export default function Goals() {
           <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-[#41B36E]/10 to-[#2F6C92]/10 border border-[#41B36E]/20">
             <p className="text-sm font-medium text-[#2F6C92]">
               <span className="inline-flex items-center gap-1">
-                {currentPeriodInfo.icon} Período Atual: {currentPeriodInfo.label}
+                {currentPeriodInfo.icon} PerÃ­odo Atual: {currentPeriodInfo.label}
               </span>
             </p>
             <p className="text-xs text-gray-600 mt-1">{periodDates.label}</p>
@@ -445,7 +493,7 @@ export default function Goals() {
         </section>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Estatísticas */}
+          {/* EstatÃ­sticas */}
           <div className="xl:col-span-1 space-y-4">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
@@ -462,22 +510,22 @@ export default function Goals() {
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Concluídas: {stats.done}</span>
+                  <span className="text-gray-600">ConcluÃ­das: {stats.done}</span>
                   <span className="text-gray-600">Total: {stats.total}</span>
                 </div>
               </div>
             </div>
 
-            {/* Ações Rápidas */}
+            {/* AÃ§Ãµes RÃ¡pidas */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h3 className="text-lg font-bold text-[#2F6C92] mb-4">Ações Rápidas</h3>
+              <h3 className="text-lg font-bold text-[#2F6C92] mb-4">AÃ§Ãµes RÃ¡pidas</h3>
               <div className="space-y-3">
                 <button 
                   onClick={clearCompleted}
                   disabled={stats.done === 0}
                   className="w-full h-10 rounded-xl border-2 border-[#41B36E] text-[#41B36E] hover:bg-[#41B36E] hover:text-white hover:brightness-110 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  Limpar Concluídas
+                  Limpar ConcluÃ­das
                 </button>
                 
                 <button 
@@ -485,14 +533,14 @@ export default function Goals() {
                   disabled={stats.total === 0}
                   className="w-full h-10 rounded-xl border-2 border-[#F96B11] text-[#F96B11] hover:bg-[#F96B11] hover:text-white hover:brightness-110 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  Reiniciar Período
+                  Reiniciar PerÃ­odo
                 </button>
                 
                 <button 
                   onClick={() => navigate('/dashboard')}
                   className="w-full h-10 rounded-xl bg-gradient-to-r from-[#2F6C92] to-[#1E5A7A] text-white hover:from-[#1E5A7A] hover:to-[#2F6C92] hover:brightness-110 transition-all duration-200 font-medium cursor-pointer"
                 >
-                  ← Voltar ao Dashboard
+                  â† Voltar ao Dashboard
                 </button>
               </div>
             </div>
@@ -503,7 +551,7 @@ export default function Goals() {
             {/* Adicionar Meta */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
               <h3 className="text-lg font-bold text-[#2F6C92] mb-4 flex items-center gap-2">
-                <span>➕</span> Nova Meta {currentPeriodInfo.label}
+                <span>âž•</span> Nova Meta {currentPeriodInfo.label}
               </h3>
               
               <div className="flex flex-col md:flex-row gap-3">
@@ -556,7 +604,7 @@ export default function Goals() {
               
               {currentPeriodGoals.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🎯</div>
+                  <div className="text-6xl mb-4">ðŸŽ¯</div>
                   <p className="text-gray-500 text-lg mb-2">Nenhuma meta definida ainda</p>
                   <p className="text-gray-400 text-sm">Comece adicionando sua primeira meta {currentPeriodInfo.label.toLowerCase()}</p>
                 </div>
@@ -593,7 +641,7 @@ export default function Goals() {
                         className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 cursor-pointer"
                         aria-label="Remover meta"
                       >
-                        🗑️
+                        ðŸ—‘ï¸
                       </button>
                     </div>
                   ))}
@@ -604,42 +652,40 @@ export default function Goals() {
         </div>
       </div>
 
-      {/* Upgrade Modal (paywall) */}
+      {      {/* Upgrade Modal (paywall) */}
       <UpgradeModal
         isOpen={showUpgrade}
         onClose={() => setShowUpgrade(false)}
         onChooseMonthly={async () => {
           try {
+            const monthly = getMonthlyPaymentLinkUrl();
+            if (monthly) {
+              const popup = openCenteredPopup(monthly, 'Assinatura Mensal');
+              await pollSubscriptionUntilActive(popup);
+              return;
+            }
             const link = getPaymentLinkUrl();
-            if (link) {
-              window.location.href = link; // Payment Link com ambos planos
-              return;
-            }
+            if (link) { const popup = openCenteredPopup(link, 'Assinatura'); await pollSubscriptionUntilActive(popup); return; }
             const priceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY as string | undefined;
-            if (!priceId) {
-              alert('Preço mensal não configurado. Defina VITE_STRIPE_PRICE_MONTHLY ou VITE_STRIPE_PAYMENT_LINK_URL.');
-              return;
-            }
+            if (!priceId) { alert('Preço mensal não configurado. Defina VITE_STRIPE_PRICE_MONTHLY ou VITE_STRIPE_PAYMENT_LINK_URL.'); return; }
             const { url } = await createCheckoutSession(priceId);
-            window.location.href = url;
+            const popup = openCenteredPopup(url, 'Assinatura Mensal');
+            await pollSubscriptionUntilActive(popup);
           } catch (e: any) {
             alert(e?.message || 'Falha ao iniciar checkout mensal');
           }
         }}
         onChooseAnnual={async () => {
           try {
+            const annual = getAnnualPaymentLinkUrl();
+            if (annual) { const popup = openCenteredPopup(annual, 'Assinatura Anual'); await pollSubscriptionUntilActive(popup); return; }
             const link = getPaymentLinkUrl();
-            if (link) {
-              window.location.href = link; // Payment Link com ambos planos
-              return;
-            }
+            if (link) { const popup = openCenteredPopup(link, 'Assinatura'); await pollSubscriptionUntilActive(popup); return; }
             const priceId = import.meta.env.VITE_STRIPE_PRICE_ANNUAL as string | undefined;
-            if (!priceId) {
-              alert('Preço anual não configurado. Defina VITE_STRIPE_PRICE_ANNUAL ou VITE_STRIPE_PAYMENT_LINK_URL.');
-              return;
-            }
+            if (!priceId) { alert('Preço anual não configurado. Defina VITE_STRIPE_PRICE_ANNUAL ou VITE_STRIPE_PAYMENT_LINK_URL.'); return; }
             const { url } = await createCheckoutSession(priceId);
-            window.location.href = url;
+            const popup = openCenteredPopup(url, 'Assinatura Anual');
+            await pollSubscriptionUntilActive(popup);
           } catch (e: any) {
             alert(e?.message || 'Falha ao iniciar checkout anual');
           }
