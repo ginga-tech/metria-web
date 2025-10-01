@@ -1,4 +1,4 @@
-interface UpgradeModalProps {
+﻿interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onChooseMonthly: () => void;
@@ -6,6 +6,8 @@ interface UpgradeModalProps {
   monthlyPriceLabel?: string;
   annualPriceLabel?: string;
   disabled?: boolean;
+  errorMessage?: string | null;
+  onRetry?: () => void;
 }
 
 export default function UpgradeModal({
@@ -13,12 +15,13 @@ export default function UpgradeModal({
   onClose,
   onChooseMonthly,
   onChooseAnnual,
-  monthlyPriceLabel = 'R$ 14,90/mês',
-  annualPriceLabel = 'R$ 11,90/mês (cobrança anual)',
+  monthlyPriceLabel = 'R$ 14,90/mǦs',
+  annualPriceLabel = 'R$ 11,90/mǦs (cobran��a anual)',
   disabled,
+  errorMessage,
+  onRetry,
 }: UpgradeModalProps) {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -40,14 +43,29 @@ export default function UpgradeModal({
 
         <div>
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center text-white">★</div>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center text-white">â˜…</div>
             <div>
               <h3 className="text-xl sm:text-2xl font-bold text-[#2F6C92] leading-tight">Desbloqueie Metas Ilimitadas</h3>
-              <p className="text-[#2F6C92]/80 text-sm mt-1">Você atingiu o limite do plano gratuito. Assine para continuar criando metas.</p>
+              <p className="text-[#2F6C92]/80 text-sm mt-1">VocÃª atingiu o limite do plano gratuito. Assine para continuar criando metas.</p>
             </div>
           </div>
 
-          {/* Botões do site (redirecionam para Payment Links) */}
+          {errorMessage && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm text-red-700">{errorMessage}</p>
+              {onRetry && (
+                <div className="mt-2">
+                  <button
+                    onClick={onRetry}
+                    className="h-10 rounded-lg bg-red-600 px-4 text-sm font-medium text-white hover:brightness-110 cursor-pointer disabled:opacity-50"
+                    disabled={disabled}
+                  >
+                    Tentar novamente
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               onClick={onChooseMonthly}
@@ -68,10 +86,10 @@ export default function UpgradeModal({
             </button>
           </div>
 
-          {/* Sem Stripe Buy Button embutido: apenas botões do site */}
+          {/* Sem Stripe Buy Button embutido: apenas botÃµes do site */}
 
           <div className="mt-5 text-xs text-gray-500">
-            Você pode cancelar quando quiser. O plano anual é cobrado de uma só vez.
+            VocÃª pode cancelar quando quiser. O plano anual Ã© cobrado de uma sÃ³ vez.
           </div>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
