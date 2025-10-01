@@ -134,6 +134,7 @@ export default function Goals() {
   const [subscriptionActive, setSubscriptionActive] = useState<boolean>(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
+  const [showFreeBanner, setShowFreeBanner] = useState(true);
 
   function openCenteredPopup(url: string, title: string, w = 520, h = 720) {
     const dualScreenLeft = window.screenLeft ?? window.screenX ?? 0;
@@ -417,6 +418,64 @@ export default function Goals() {
             <UserMenu userEmail={user?.email} userName={user?.name} />
           </div>
         </header>
+
+        {/* Aviso de plano gratuito (sem assinatura ativa) - versão alerta */}
+        {!subscriptionActive && showFreeBanner && (
+          <div
+            className="relative mb-6 rounded-xl border border-[#F59E0B]/60 bg-[#F59E0B]/15 p-4 shadow-sm cursor-pointer"
+            role="alert"
+            aria-live="polite"
+            onClick={() => setShowUpgrade(true)}
+          >
+            <button
+              type="button"
+              aria-label="Fechar aviso"
+              onClick={(e) => { e.stopPropagation(); setShowFreeBanner(false); }}
+              className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full text-[#7C2D12] hover:bg-black/10"
+            >
+              ×
+            </button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pr-10">
+              <p className="text-sm text-[#7C2D12]">
+                Você está no plano gratuito. É possível cadastrar até 5 metas. Para metas ilimitadas e recursos premium, faça sua assinatura.
+              </p>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowUpgrade(true); }}
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-[#F59E0B] px-4 text-sm font-medium text-white hover:brightness-110 cursor-pointer"
+              >
+                Assinar agora
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Aviso original desativado (substituído pela versão alerta acima) */}
+        {!subscriptionActive && false && (
+          <div className="mb-6 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/5 p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[#2F6C92]">
+                Você está no plano gratuito. É possível cadastrar até 5 metas. Para metas ilimitadas e recursos premium, faça sua assinatura.
+              </p>
+              {subscribeUrl ? (
+                <a
+                  href={subscribeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 items-center justify-center rounded-lg bg-[#2F6C92] px-4 text-sm font-medium text-white hover:brightness-110"
+                >
+                  Assinar agora
+                </a>
+              ) : (
+                <button
+                  onClick={() => setShowUpgrade(true)}
+                  className="inline-flex h-10 items-center justify-center rounded-lg bg-[#2F6C92] px-4 text-sm font-medium text-white hover:brightness-110 cursor-pointer"
+                >
+                  Assinar agora
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Seletor de Período */}
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
