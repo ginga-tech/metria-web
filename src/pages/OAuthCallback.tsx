@@ -34,6 +34,7 @@ export default function OAuthCallback() {
         if (url.hash.includes('token=')) {
           token = url.hash.replace('#token=', '').split('&')[0];
           token = decodeURIComponent(token);
+          token = token.replace(/^Bearer\s+/i, '');
           console.log('Token encontrado no hash fragment');
         }
         
@@ -41,6 +42,7 @@ export default function OAuthCallback() {
         if (!token) {
           token = url.searchParams.get('token') || '';
           if (token) {
+            token = token.replace(/^Bearer\s+/i, '');
             console.log('Token encontrado nos query parameters');
           }
         }
@@ -55,13 +57,13 @@ export default function OAuthCallback() {
               type: 'OAUTH_RESULT',
               success: true,
               token: token
-            }, window.location.origin);
+            }, '*');
             window.close();
             return;
           } else {
             // Se não está em popup, comportamento normal
-            console.log('Salvando token e redirecionando para assessment');
-            localStorage.setItem('lb_token', token);
+            console.log('Salvando token normalizado e redirecionando para assessment');
+            localStorage.setItem('lb_token', token.replace(/^Bearer\s+/i, ''));
             setTimeout(() => {
               navigate('/assessment', { replace: true });
             }, 100);
@@ -77,7 +79,7 @@ export default function OAuthCallback() {
           try {
             const res = await exchangeGoogleCode(code);
             console.log('Token obtido com sucesso via código');
-            localStorage.setItem('lb_token', res.token);
+            localStorage.setItem('lb_token', (res.token || '').replace(/^Bearer\s+/i, ''));
             // Pequeno delay para garantir que o token foi salvo
             setTimeout(() => {
               navigate('/assessment', { replace: true });

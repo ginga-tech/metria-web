@@ -29,12 +29,16 @@ export default function LifeBalanceAuth() {
   // Email validation regex
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // Capture token on root (fallback), in case backend redirected to "/?token=..."
+  // Capture token on root (fallback), in case backend redirected to "/?token=..." or "#token=..."
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
-      const token = url.searchParams.get("token") || url.hash.replace("#token=", "") || "";
+      const fromQuery = url.searchParams.get("token") || "";
+      const fromHash = url.hash.startsWith("#token=") ? url.hash.slice(7) : "";
+      let token = fromQuery || fromHash;
       if (token) {
+        try { token = decodeURIComponent(token); } catch {}
+        token = token.replace(/^Bearer\s+/i, '');
         localStorage.setItem("lb_token", token);
         url.searchParams.delete("token");
         window.history.replaceState({}, document.title, url.pathname + url.search);
@@ -70,10 +74,10 @@ export default function LifeBalanceAuth() {
     setMessage(null);
     if (mode === "login") {
       const res = await login({ email: eTrim, password: p });
-      localStorage.setItem("lb_token", res.token);
+      localStorage.setItem("lb_token", (res.token || '').replace(/^Bearer\s+/i, ''));
     } else {
       const res = await signup({ name: name.trim(), email: eTrim, password: p });
-      localStorage.setItem("lb_token", res.token);
+      localStorage.setItem("lb_token", (res.token || '').replace(/^Bearer\s+/i, ''));
     }
     setMessage("Autenticação realizada com sucesso!");
     navigate("/assessment");
@@ -101,7 +105,7 @@ export default function LifeBalanceAuth() {
       setMessage(null);
       const token = await loginWithGoogle();
       if (token) {
-        localStorage.setItem("lb_token", token);
+        localStorage.setItem("lb_token", token.replace(/^Bearer\s+/i, ''));
         setMessage("Login com Google realizado com sucesso!");
         navigate("/assessment");
       }
@@ -426,14 +430,7 @@ export default function LifeBalanceAuth() {
             </p>
 
             {/* Atalho para Goals - apenas para desenvolvimento */}
-            <div className="mt-4 pt-4 border-t border-[#2F6C92]/10">
-              <button
-                onClick={() => navigate('/goals')}
-                className="w-full text-xs text-[#2F6C92]/60 hover:text-[#F96B11] hover:underline transition-colors py-2"
-              >
-                🎯 Acesso direto às Metas (Dev)
-              </button>
-            </div>
+            
           </div>
         </section>
       </div>

@@ -216,7 +216,7 @@ export default function DashboardReordered() {
                 </p>
               </div>
             </div>
-            <UserMenu userEmail={user?.email} />
+            <UserMenu userEmail={user?.email} userName={user?.name} />
           </div>
         </header>
 

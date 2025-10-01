@@ -4,9 +4,36 @@ import { createCustomerPortal } from "../services/billingService";
 
 interface UserMenuProps {
   userEmail?: string;
+  userName?: string;
 }
 
-export default function UserMenu({ userEmail }: UserMenuProps) {
+// Função para limpar todos os dados de autenticação e cache
+function clearAuthDataAndLogout() {
+  // Remove token do localStorage
+  localStorage.removeItem('lb_token');
+  
+  // Remove dados específicos da aplicação
+  localStorage.removeItem('lb_goals');
+  localStorage.removeItem('lb_assessment');
+  localStorage.removeItem('lb_user_data');
+  
+  // Remove dados do sessionStorage
+  sessionStorage.removeItem('editAssessment');
+  sessionStorage.clear();
+  
+  // Limpa cookies relacionados à autenticação
+  document.cookie.split(";").forEach((c) => {
+    const eqPos = c.indexOf("=");
+    const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+  });
+  
+  // Redireciona para a página principal e força reload
+  window.location.href = '/';
+}
+
+export default function UserMenu({ userEmail, userName }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -29,8 +56,7 @@ export default function UserMenu({ userEmail }: UserMenuProps) {
   }, [isOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem('lb_token');
-    navigate('/', { replace: true });
+    clearAuthDataAndLogout();
   };
 
   const handleEditAssessment = () => {
@@ -59,14 +85,20 @@ export default function UserMenu({ userEmail }: UserMenuProps) {
     setIsOpen(false);
   };
 
-  // Pega as iniciais do email para o avatar
-  const getInitials = (email: string) => {
-    if (!email) return 'U';
-    const parts = email.split('@')[0].split('.');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+  // Pega as iniciais do nome (preferencial) ou e-mail
+  const getInitials = (name?: string, email?: string) => {
+    if (name && name.trim()) {
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return parts[0][0].toUpperCase();
     }
-    return email[0].toUpperCase();
+    if (email) {
+      const local = email.split('@')[0];
+      const parts = local.split('.');
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return local[0]?.toUpperCase() || 'U';
+    }
+    return 'U';
   };
 
   return (
@@ -77,7 +109,7 @@ export default function UserMenu({ userEmail }: UserMenuProps) {
         className="flex items-center justify-center w-10 h-10 rounded-full bg-[#2F6C92] text-white font-medium hover:bg-[#2F6C92]/90 transition-colors"
         aria-label="Menu do usuário"
       >
-        {userEmail ? getInitials(userEmail) : 'U'}
+        {getInitials(userName, userEmail)}
       </button>
 
       {/* Dropdown Menu */}
@@ -86,7 +118,7 @@ export default function UserMenu({ userEmail }: UserMenuProps) {
           {/* User Info */}
           <div className="px-4 py-3 border-b border-[#2F6C92]/10">
             <p className="text-sm font-medium text-[#2F6C92]">Conectado como:</p>
-            <p className="text-sm text-[#2F6C92]/80 truncate">{userEmail || 'Usuário'}</p>
+            <p className="text-sm text-[#2F6C92]/80 truncate">{userName || userEmail || 'Usuário'}</p>
           </div>
 
           {/* Menu Items */}

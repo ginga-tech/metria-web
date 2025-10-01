@@ -9,6 +9,32 @@ interface UserStatus {
   name: string;
 }
 
+// Função para limpar todos os dados de autenticação e redirecionar
+function clearAuthDataAndRedirect() {
+  // Remove token do localStorage
+  localStorage.removeItem('lb_token');
+  
+  // Remove dados específicos da aplicação
+  localStorage.removeItem('lb_goals');
+  localStorage.removeItem('lb_assessment');
+  localStorage.removeItem('lb_user_data');
+  
+  // Remove dados do sessionStorage
+  sessionStorage.removeItem('editAssessment');
+  sessionStorage.clear();
+  
+  // Limpa cookies relacionados à autenticação
+  document.cookie.split(";").forEach((c) => {
+    const eqPos = c.indexOf("=");
+    const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+  });
+  
+  // Redireciona para a página principal e força reload
+  window.location.href = '/';
+}
+
 export function useSmartRedirect() {
   const [loading, setLoading] = useState(true);
   const [userStatus, setUserStatus] = useState<UserStatus | null>(null);
@@ -62,8 +88,13 @@ export function useSmartRedirect() {
           }
           
         } else {
-          // Token inválido, remove do localStorage
-          localStorage.removeItem('lb_token');
+          // Só faz logout em 401/403; em outros casos, mantém o usuário e apenas loga.
+          if (response.status === 401 || response.status === 403) {
+            console.log('Token inválido (', response.status, ') no useSmartRedirect, fazendo logout automático...');
+            clearAuthDataAndRedirect();
+          } else {
+            console.warn('Falha em /user/status (status:', response.status, '). Mantendo sessão.');
+          }
         }
       } catch (error) {
         console.error('Erro ao verificar status do usuário:', error);

@@ -9,12 +9,14 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GlobalLoader from "./components/GlobalLoader";
+import Footer from "./components/Footer";
 
 // Layout component que inclui o GlobalLoader
 function Layout() {
   return (
     <>
       <Outlet />
+      <Footer />
       <GlobalLoader />
     </>
   );

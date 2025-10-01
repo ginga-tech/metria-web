@@ -176,7 +176,7 @@ export default function Preferences() {
                 </p>
               </div>
             </div>
-            <UserMenu userEmail={user?.email} />
+            <UserMenu userEmail={user?.email} userName={user?.name} />
           </div>
         </header>
 
