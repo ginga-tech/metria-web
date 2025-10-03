@@ -3,6 +3,7 @@ import LifeBalanceAuth from "./pages/LifeBalanceAuth";
 import Assessment from "./pages/Assessment";
 import Dashboard from "./pages/DashboardReordered";
 import Preferences from "./pages/Preferences";
+import Subscriptions from "./pages/Subscriptions";
 import Goals from "./pages/Goals";
 import OAuthCallback from "./pages/OAuthCallback";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -49,6 +50,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Preferences />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: "subscriptions", 
+        element: (
+          <ProtectedRoute>
+            <Subscriptions />
           </ProtectedRoute>
         ) 
       },

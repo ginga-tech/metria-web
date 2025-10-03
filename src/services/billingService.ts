@@ -56,6 +56,42 @@ export async function createCustomerPortal(): Promise<{ url: string }> {
   return r.json();
 }
 
+// List all subscriptions for the current user
+export type SubscriptionRecord = {
+  id?: string;
+  provider?: string | null;
+  status: string;
+  plan?: string | null;
+  startedAtUtc?: string | null;
+  currentPeriodStartUtc?: string | null;
+  currentPeriodEndUtc?: string | null;
+  canceledAtUtc?: string | null;
+  createdAtUtc?: string | null;
+  updatedAtUtc?: string | null;
+};
+
+export async function getSubscriptions(): Promise<SubscriptionRecord[]> {
+  if (!API_BASE) return [];
+  const r = await fetch(`${API_BASE}/api/billing/subscriptions/history`, {
+    headers: getAuthHeaders(),
+  });
+  if (!r.ok) return [];
+  const raw = await r.json();
+  if (!Array.isArray(raw)) return [];
+  return raw.map((s: any, idx: number) => ({
+    id: String(idx + 1),
+    provider: s.provider ?? null,
+    plan: s.plan ?? null,
+    status: s.status ?? 'unknown',
+    startedAtUtc: s.startedAtUtc ?? null,
+    currentPeriodStartUtc: s.currentPeriodStartUtc ?? null,
+    currentPeriodEndUtc: s.currentPeriodEndUtc ?? null,
+    canceledAtUtc: s.canceledAtUtc ?? null,
+    createdAtUtc: s.createdAtUtc ?? null,
+    updatedAtUtc: s.updatedAtUtc ?? null,
+  }));
+}
+
 // Optional: Payment Link shortcut (single URL that contains both plans)
 export function getPaymentLinkUrl(): string | undefined {
   // When set, front can redirect directly without creating a Checkout Session

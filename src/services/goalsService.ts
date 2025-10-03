@@ -11,6 +11,9 @@ export interface Goal {
   endDate: string;
   category?: string;
   createdAtUtc: string;
+  updatedAtUtc?: string;
+  updatedBy?: string;
+  isActive?: boolean;
 }
 
 export interface CreateGoalRequest {
@@ -22,7 +25,10 @@ export interface CreateGoalRequest {
 }
 
 export interface UpdateGoalRequest {
-  done: boolean;
+  done?: boolean;
+  isActive?: boolean;
+  updatedAtUtc?: string;
+  updatedBy?: string;
 }
 
 export interface GetGoalsParams {
@@ -33,17 +39,28 @@ export interface GetGoalsParams {
 
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem('lb_token');
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+function periodToBackend(p: GoalPeriod): string {
+  switch (p) {
+    case 'weekly': return 'Weekly';
+    case 'monthly': return 'Monthly';
+    case 'quarterly': return 'Quarterly';
+    case 'semiannual': return 'Semiannual';
+    case 'annual': return 'Annual';
+    case 'custom': default: return 'Custom';
+  }
 }
 
 export async function createGoal(request: CreateGoalRequest): Promise<Goal> {
+  if (!API_BASE) throw new Error('API não configurada (VITE_API_BASE_URL ausente).');
   // Convert frontend period to backend enum format and format dates properly
   const backendRequest = {
     text: request.text,
-    period: capitalizeFirst(request.period),
+    period: periodToBackend(request.period),
     startDate: new Date(request.startDate).toISOString(),
     endDate: new Date(request.endDate).toISOString(),
     category: request.category
@@ -56,14 +73,18 @@ export async function createGoal(request: CreateGoalRequest): Promise<Goal> {
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `Erro ${response.status} ao criar meta`);
+    let msg: any = null;
+    const ct = response.headers.get('content-type') || '';
+    try { msg = ct.includes('application/json') ? await response.json() : await response.text(); } catch {}
+    const details = typeof msg === 'string' ? msg : (msg?.message || msg?.title || JSON.stringify(msg));
+    throw new Error(details || `Erro ${response.status} ao criar meta`);
   }
 
   return response.json();
 }
 
 export async function getGoals(params?: GetGoalsParams): Promise<Goal[]> {
+  if (!API_BASE) throw new Error('API não configurada (VITE_API_BASE_URL ausente).');
   const searchParams = new URLSearchParams();
   
   if (params?.period) {
@@ -87,14 +108,18 @@ export async function getGoals(params?: GetGoalsParams): Promise<Goal[]> {
     if (response.status === 404) {
       return []; // Nenhuma meta encontrada
     }
-    const error = await response.text();
-    throw new Error(error || `Erro ${response.status} ao buscar metas`);
+    let msg: any = null;
+    const ct = response.headers.get('content-type') || '';
+    try { msg = ct.includes('application/json') ? await response.json() : await response.text(); } catch {}
+    const details = typeof msg === 'string' ? msg : (msg?.message || msg?.title || JSON.stringify(msg));
+    throw new Error(details || `Erro ${response.status} ao buscar metas`);
   }
 
   return response.json();
 }
 
 export async function updateGoal(id: string, request: UpdateGoalRequest): Promise<Goal> {
+  if (!API_BASE) throw new Error('API não configurada (VITE_API_BASE_URL ausente).');
   const response = await fetch(`${API_BASE}/api/goals/${encodeURIComponent(id)}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
@@ -102,8 +127,11 @@ export async function updateGoal(id: string, request: UpdateGoalRequest): Promis
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `Erro ${response.status} ao atualizar meta`);
+    let msg: any = null;
+    const ct = response.headers.get('content-type') || '';
+    try { msg = ct.includes('application/json') ? await response.json() : await response.text(); } catch {}
+    const details = typeof msg === 'string' ? msg : (msg?.message || msg?.title || JSON.stringify(msg));
+    throw new Error(details || `Erro ${response.status} ao atualizar meta`);
   }
 
   return response.json();

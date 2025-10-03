@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import lifeBalanceLogo from "../assets/lifebalance-logo.svg";
 import Tooltip from "../components/Tooltip";
@@ -24,7 +24,7 @@ export default function ResetPassword() {
       return;
     }
     
-    // Verificar se o token é válido
+    // Verificar se o token Ã© vÃ¡lido
     validateToken();
   }, [token, navigate]);
 
@@ -42,11 +42,11 @@ export default function ResetPassword() {
       setTokenValid(response.ok);
       
       if (!response.ok) {
-        setMessage("Link de recuperação inválido ou expirado.");
+        setMessage("Link de recuperaÃ§Ã£o invÃ¡lido ou expirado.");
       }
     } catch (err) {
       setTokenValid(false);
-      setMessage("Erro ao validar link de recuperação.");
+      setMessage("Erro ao validar link de recuperaÃ§Ã£o.");
     }
   }
 
@@ -58,7 +58,7 @@ export default function ResetPassword() {
       next.password = "A senha deve ter pelo menos 6 caracteres";
     }
     if (password !== confirmPassword) {
-      next.confirmPassword = "As senhas não coincidem";
+      next.confirmPassword = "As senhas nÃ£o coincidem";
     }
 
     setErrors(next);
@@ -83,15 +83,15 @@ export default function ResetPassword() {
         setIsSuccess(true);
         setMessage("Senha redefinida com sucesso!");
       } else {
-        const errorData = await response.text();
+        await response.text();
         if (response.status === 400) {
-          setMessage("Link de recuperação inválido ou expirado.");
+          setMessage("Link de recuperaÃ§Ã£o invÃ¡lido ou expirado.");
         } else {
           setMessage("Erro ao redefinir senha. Tente novamente.");
         }
       }
     } catch (err) {
-      setMessage("Erro de conexão. Verifique sua internet e tente novamente.");
+      setMessage("Erro de conexÃ£o. Verifique sua internet e tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +109,7 @@ export default function ResetPassword() {
             />
           </div>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#41B36E] mx-auto"></div>
-          <p className="mt-4 text-[#2F6C92]/80">Validando link de recuperação...</p>
+          <p className="mt-4 text-[#2F6C92]/80">Validando link de recuperaÃ§Ã£o...</p>
         </div>
       </div>
     );
@@ -134,10 +134,10 @@ export default function ResetPassword() {
               </svg>
             </div>
             <h2 className="text-xl font-semibold text-[#2F6C92] mb-2">
-              Link Inválido
+              Link InvÃ¡lido
             </h2>
             <p className="text-[#2F6C92]/80 text-sm">
-              Este link de recuperação é inválido ou já expirou.
+              Este link de recuperaÃ§Ã£o Ã© invÃ¡lido ou jÃ¡ expirou.
             </p>
           </div>
 
@@ -182,7 +182,7 @@ export default function ResetPassword() {
               Senha Redefinida!
             </h2>
             <p className="text-[#2F6C92]/80 text-sm">
-              Sua senha foi alterada com sucesso. Agora você pode fazer login com sua nova senha.
+              Sua senha foi alterada com sucesso. Agora vocÃª pode fazer login com sua nova senha.
             </p>
           </div>
 
@@ -353,7 +353,7 @@ export default function ResetPassword() {
             onClick={() => navigate("/")}
             className="text-sm text-[#F96B11] hover:underline font-medium"
           >
-            ← Voltar ao Login
+            â† Voltar ao Login
           </button>
         </div>
       </div>

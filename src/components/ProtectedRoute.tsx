@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { loading, userStatus } = useSmartRedirect();
+  const { loading } = useSmartRedirect();
   const token = localStorage.getItem('lb_token');
   
   // Se não tem token, redireciona para login

@@ -15,8 +15,8 @@ export default function UpgradeModal({
   onClose,
   onChooseMonthly,
   onChooseAnnual,
-  monthlyPriceLabel = 'R$ 14,90/mǦs',
-  annualPriceLabel = 'R$ 11,90/mǦs (cobran��a anual)',
+  monthlyPriceLabel = 'R$ 14,90/mês',
+  annualPriceLabel = 'R$ 11,90/mês (cobrança anual)',
   disabled,
   errorMessage,
   onRetry,
@@ -43,10 +43,10 @@ export default function UpgradeModal({
 
         <div>
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center text-white">â˜…</div>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center text-white">★</div>
             <div>
               <h3 className="text-xl sm:text-2xl font-bold text-[#2F6C92] leading-tight">Desbloqueie Metas Ilimitadas</h3>
-              <p className="text-[#2F6C92]/80 text-sm mt-1">VocÃª atingiu o limite do plano gratuito. Assine para continuar criando metas.</p>
+              <p className="text-[#2F6C92]/80 text-sm mt-1">Você atingiu o limite do plano gratuito. Assine para continuar criando metas.</p>
             </div>
           </div>
 
@@ -86,10 +86,10 @@ export default function UpgradeModal({
             </button>
           </div>
 
-          {/* Sem Stripe Buy Button embutido: apenas botÃµes do site */}
+          {/* Sem Stripe Buy Button embutido: apenas botões do site */}
 
           <div className="mt-5 text-xs text-gray-500">
-            VocÃª pode cancelar quando quiser. O plano anual Ã© cobrado de uma sÃ³ vez.
+            Você pode cancelar quando quiser. O plano anual é cobrado de uma só vez.
           </div>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3">

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+﻿import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import lifeBalanceLogo from "../assets/lifebalance-logo.svg";
 import "../styles/slider.css";
@@ -7,9 +7,9 @@ import { useUser } from "../hooks/useUser";
 import { DIMENSIONS, type DimensionKey } from "../constants/assessment";
 
 /**
- * LifeBalance Ã¢â‚¬â€œ AutoavaliaÃƒÂ§ÃƒÂ£o (10 dimensÃƒÂµes)
+ * LifeBalance — Autoavaliação (10 dimensões)
  * Stack: React + TailwindCSS
- * Fluxo: usuÃƒÂ¡rio avalia 1Ã¢â‚¬â€œ5 cada dimensÃƒÂ£o e envia Ã¢â€ â€™ salva no backend e navega p/ dashboard
+ * Fluxo: usuário avalia 1–5 cada dimensão e envia → salva no backend e navega p/ dashboard
  * Paleta: Azul #2F6C92 | Verde #41B36E | Laranja #F96B11 | Cinza #F3F4F6 | Branco #FFFFFF
  */
 
@@ -29,7 +29,7 @@ export default function Assessment() {
   const [lastAssessmentDate, setLastAssessmentDate] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Carrega os dados salvos do usuÃƒÂ¡rio
+  // Carrega os dados salvos do usuário
   useEffect(() => {
     let mounted = true;
     
@@ -57,7 +57,7 @@ export default function Assessment() {
               setIsEditing(true);
             }
           } else if (r.status === 404) {
-            // NÃƒÂ£o tem assessment ainda, usa dados locais se houver
+            // Não tem assessment ainda, usa dados locais se houver
             const local = readLocalAssessment();
             if (mounted && local?.scores) {
               const savedValues: Record<DimensionKey, number> = Object.create(null);
@@ -129,19 +129,19 @@ export default function Assessment() {
           },
           body: JSON.stringify(payload),
         });
-        if (!r.ok) throw new Error(`Erro ao salvar avaliaÃƒÂ§ÃƒÂ£o (${r.status})`);
+        if (!r.ok) throw new Error(`Erro ao salvar avaliação (${r.status})`);
       } else {
-        // fallback local (sem API) Ã¢â‚¬â€œ ÃƒÂºtil enquanto integra o backend
+        // fallback local (sem API) — útil enquanto integra o backend
         const history = JSON.parse(localStorage.getItem("lb_assessment") || "[]");
         history.push(payload);
         localStorage.setItem("lb_assessment", JSON.stringify(history));
       }
 
-      setMessage("AvaliaÃƒÂ§ÃƒÂ£o salva! Gerando seu Balance...");
+      setMessage("Avaliação salva! Gerando seu Balance...");
       // navega para dashboard (crie a rota /dashboard no router)
       setTimeout(() => navigate("/dashboard"), 400);
     } catch (err: any) {
-      setMessage(err?.message || "Erro inesperado ao enviar avaliaÃƒÂ§ÃƒÂ£o");
+      setMessage(err?.message || "Erro inesperado ao enviar avaliação");
     } finally {
       setIsSubmitting(false);
     }
@@ -160,14 +160,18 @@ export default function Assessment() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center">
-              <span className="text-white text-lg">Ã°Å¸â€œÅ </span>
+              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                <circle cx="12" cy="12" r="5" strokeWidth={2} />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+              </svg>
             </div>
             <div>
               <h1 className="text-xl font-bold text-[#2F6C92]">
-                {isEditing ? "Editar Assessment" : "Novo Assessment"}
+                {isEditing ? "Editar Avaliação" : "Nova Avaliação"}
               </h1>
               <p className="text-sm text-[#2F6C92]/70">
-                OlÃƒÂ¡, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'UsuÃƒÂ¡rio'}</span>!
+                Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>!
               </p>
             </div>
           </div>
@@ -176,7 +180,7 @@ export default function Assessment() {
       </header>
 
       <div className="w-full max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* SeÃƒÂ§ÃƒÂ£o esquerda - InformaÃƒÂ§ÃƒÂµes */}
+        {/* Seção esquerda - Informações */}
         <section className="relative overflow-hidden rounded-2xl shadow-xl bg-white flex items-center justify-center p-10 order-2 lg:order-1">
           <div className="absolute inset-0 bg-white" />
           <div className="relative z-10 w-full max-w-[400px] text-[#6B3D0C]">
@@ -189,19 +193,19 @@ export default function Assessment() {
             </div>
 
             <h2 className="font-display text-xl sm:text-2xl font-bold leading-tight tracking-tight text-center mb-4">
-              {isEditing ? "Editar AvaliaÃƒÂ§ÃƒÂ£o" : "AutoavaliaÃƒÂ§ÃƒÂ£o das 10 DimensÃƒÂµes"}
+              {isEditing ? "Editar Avalia\u00E7\u00E3o" : "Autoavalia\u00E7\u00E3o das 10 Dimens\u00F5es"}
             </h2>
             <p className="text-[#7A4312]/90 text-center mb-6">
               {isEditing 
-                ? "Ajuste suas pontuaÃƒÂ§ÃƒÂµes conforme sua evoluÃƒÂ§ÃƒÂ£o atual. As alteraÃƒÂ§ÃƒÂµes serÃƒÂ£o salvas com nova data."
-                : "Avalie honestamente cada dimensÃƒÂ£o da sua vida de 1 a 5. Esta anÃƒÂ¡lise serÃƒÂ¡ a base para gerar seu radar de equilÃƒÂ­brio personalizado."
+                ? "Ajuste suas pontua\u00E7\u00F5es conforme sua evolu\u00E7\u00E3o atual. As altera\u00E7\u00F5es ser\u00E3o salvas com nova data."
+                : "Avalie honestamente cada dimens\u00E3o da sua vida de 1 a 5. Esta an\u00E1lise ser\u00E1 a base para gerar seu radar de equil\u00EDbrio personalizado."
               }
             </p>
 
-            {/* InformaÃƒÂ§ÃƒÂ£o da ÃƒÂºltima avaliaÃƒÂ§ÃƒÂ£o */}
+            {/* Informações da última avaliação */}
             {isEditing && lastAssessmentDate && (
               <div className="mb-6 p-4 rounded-xl bg-[#41B36E]/10 border border-[#41B36E]/20">
-                <p className="text-sm text-[#2F6C92] font-medium mb-1">Ã°Å¸â€œâ€¦ ÃƒÅ¡ltima avaliaÃƒÂ§ÃƒÂ£o:</p>
+                <p className="text-sm text-[#2F6C92] font-medium mb-1">Última avaliação:</p>
                 <p className="text-sm text-[#2F6C92]/80">
                   {formatDate(lastAssessmentDate)}
                 </p>
@@ -210,11 +214,11 @@ export default function Assessment() {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="rounded-xl bg-[#F3F4F6] p-4 text-center">
-                <p className="text-sm text-[#2F6C92]/70">MÃƒÂ©dia Atual</p>
+                <p className="text-sm text-[#2F6C92]/70">Média Atual</p>
                 <p className="text-2xl font-semibold text-[#2F6C92]">{avg}</p>
               </div>
               <div className="rounded-xl bg-[#F3F4F6] p-4 text-center">
-                <p className="text-sm text-[#2F6C92]/70">DimensÃƒÂµes</p>
+                <p className="text-sm text-[#2F6C92]/70">Dimensões</p>
                 <p className="text-2xl font-semibold text-[#2F6C92]">{DIMENSIONS.length}</p>
               </div>
             </div>
@@ -231,21 +235,21 @@ export default function Assessment() {
           </div>
         </section>
 
-        {/* SeÃƒÂ§ÃƒÂ£o direita - FormulÃƒÂ¡rio */}
+        {/* Seção direita - Formulário */}
         <section className="rounded-2xl shadow-xl bg-white p-6 sm:p-8 order-1 lg:order-2">
           <div className="mb-6">
             <p className="text-sm text-[#2F6C92] font-medium mb-1">
-              {isEditing ? "Atualize sua avaliaÃƒÂ§ÃƒÂ£o" : "Sua jornada de autoconhecimento"}
+              {isEditing ? "Atualize sua avaliação" : "Sua jornada de autoconhecimento"}
             </p>
             <h3 className="text-2xl sm:text-3xl font-semibold text-[#2F6C92]">
-              {isEditing ? "Editar dimensÃƒÂµes" : "Avalie suas dimensÃƒÂµes"}
+              {isEditing ? "Editar Dimensões" : "Avalie suas Dimensões"}
             </h3>
           </div>
 
           {isLoading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2F6C92]"></div>
-              <span className="ml-3 text-[#2F6C92]">Carregando sua avaliaÃƒÂ§ÃƒÂ£o...</span>
+              <span className="ml-3 text-[#2F6C92]">Carregando sua avaliação...</span>
             </div>
           )}
 
@@ -267,8 +271,8 @@ export default function Assessment() {
                 className="w-full h-12 rounded-xl bg-[#41B36E] text-white font-semibold hover:brightness-95 disabled:opacity-60 transition"
               >
                 {isSubmitting 
-                  ? (isEditing ? "Salvando alteraÃƒÂ§ÃƒÂµes..." : "Gerando seu Balance...") 
-                  : (isEditing ? "Salvar AlteraÃƒÂ§ÃƒÂµes" : "Gerar meu LifeBalance")
+                  ? (isEditing ? "Salvando alterações..." : "Gerando seu Balance...") 
+                  : (isEditing ? "Salvar Alterações" : "Gerar meu LifeBalance")
                 }
               </button>
               
@@ -293,7 +297,7 @@ export default function Assessment() {
   );
 }
 
-// FunÃƒÂ§ÃƒÂ£o para ler assessment local
+// Função para ler assessment local
 function readLocalAssessment() {
   try {
     const raw = localStorage.getItem("lb_assessment");
@@ -306,7 +310,7 @@ function readLocalAssessment() {
   }
 }
 
-// FunÃƒÂ§ÃƒÂ£o para formatar data
+// Função para formatar data
 function formatDate(dateString: string): string {
   try {
     const date = new Date(dateString);

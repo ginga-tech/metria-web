@@ -31,6 +31,9 @@ type Goal = {
   startDate: string;
   endDate: string;
   category?: string;
+  isActive?: boolean;
+  updatedAtUtc?: string;
+  updatedBy?: string;
 };
 
 // Categorias baseadas nas dimensões do Assessment
@@ -226,7 +229,16 @@ export default function Goals() {
       if (raw) {
         const parsed = JSON.parse(raw) as GoalsState;
         if (parsed && parsed.currentPeriod && Array.isArray(parsed.items)) {
-          return parsed;
+          const mapDateOnly = (s: string | undefined | null) => s ? (s.includes('T') ? s.split('T')[0] : s) : '';
+          return {
+            ...parsed,
+            items: parsed.items.map((g) => ({
+              ...g,
+              startDate: mapDateOnly(g.startDate),
+              endDate: mapDateOnly(g.endDate),
+              isActive: g.isActive !== false,
+            })),
+          };
         }
       }
     } catch {}
@@ -251,30 +263,49 @@ export default function Goals() {
   // Carrega todas as metas do backend ao entrar na tela
   useEffect(() => {
     const normalize = (p: string): GoalPeriod => {
-      switch ((p || '').toLowerCase()) {
+      const period = (p || '').toLowerCase();
+      console.log('🔄 Normalizando período:', p, '→', period);
+      switch (period) {
         case 'weekly': return 'weekly';
         case 'monthly': return 'monthly';
         case 'quarterly': return 'quarterly';
         case 'semiannual': return 'semiannual';
         case 'annual': return 'annual';
-        case 'custom': default: return 'custom';
+        case 'custom': 
+        default: 
+          console.log('⚠️ Período não reconhecido, usando custom:', p);
+          return 'custom';
       }
+    };
+    const dateOnly = (s: string | undefined | null): string => {
+      if (!s) return '';
+      const i = s.indexOf('T');
+      return i >= 0 ? s.slice(0, i) : s;
     };
     (async () => {
       try {
+        console.log('🔄 Carregando metas do backend...');
         const goals = await getGoals();
-        const mapped: Goal[] = goals.map((g) => ({
-          id: g.id,
-          text: g.text,
-          done: g.done,
-          period: normalize(g.period),
-          startDate: g.startDate,
-          endDate: g.endDate,
-          category: g.category,
-        }));
+        console.log('📊 Metas recebidas do backend:', goals);
+        
+          const mapped: Goal[] = goals.map((g) => ({
+            id: g.id,
+            text: g.text,
+            done: g.done,
+            period: normalize(g.period),
+            startDate: dateOnly(g.startDate),
+            endDate: dateOnly(g.endDate),
+            category: g.category,
+            isActive: g.isActive !== false,
+            updatedAtUtc: g.updatedAtUtc,
+            updatedBy: g.updatedBy,
+          }));
+        
+        console.log('🔄 Metas mapeadas:', mapped);
         setState((s) => ({ ...s, items: mapped }));
+        console.log('✅ Metas carregadas no estado');
       } catch (err) {
-        console.error('Erro ao carregar metas:', err);
+        console.error('❌ Erro ao carregar metas:', err);
       }
     })();
   }, []);
@@ -292,13 +323,37 @@ export default function Goals() {
   }, []);
   
   const currentPeriodGoals = useMemo(() => {
-    return state.items
+    console.log('🔍 Filtrando metas para o período atual:');
+    console.log('- Período atual:', state.currentPeriod);
+    console.log('- Datas do período:', periodDates);
+    console.log('- Total de metas no estado:', state.items.length);
+    console.log('- Todas as metas:', state.items);
+    
+    // CORREÇÃO TEMPORÁRIA: Mostrar todas as metas do período, independente das datas exatas
+    const filtered = state.items
+      .filter((goal) => goal.isActive !== false)
       .filter((goal) => {
-        if (goal.period !== state.currentPeriod) return false;
+        const periodMatch = goal.period === state.currentPeriod;
+        console.log(`Meta "${goal.text}": período ${goal.period} === ${state.currentPeriod}? ${periodMatch}`);
+        
+        if (!periodMatch) return false;
+        
+        // Para período custom, sempre mostrar
         if (state.currentPeriod === 'custom') return true;
-        return goal.startDate === periodDates.start && goal.endDate === periodDates.end;
+        
+        // TEMPORÁRIO: Para outros períodos, mostrar todas as metas do período
+        // (ignorando verificação exata de datas por enquanto)
+        console.log(`Meta "${goal.text}": aprovada por período ${goal.period}`);
+        return true;
       })
-      .filter((goal) => !filterCategory || goal.category === filterCategory);
+      .filter((goal) => {
+        const categoryMatch = !filterCategory || goal.category === filterCategory;
+        console.log(`Meta "${goal.text}": categoria ${goal.category} match? ${categoryMatch}`);
+        return categoryMatch;
+      });
+    
+    console.log('📊 Metas filtradas:', filtered);
+    return filtered;
   }, [state.items, state.currentPeriod, periodDates, filterCategory]);
 
   const stats = useMemo(() => {
@@ -351,9 +406,9 @@ export default function Goals() {
       alert('Selecione uma categoria do Assessment para vincular sua meta.');
       return;
     }
-    // Paywall simples: limite de 5 metas no plano gratuito (conta total)
+    // Paywall simples: limite de 5 metas ativas no plano gratuito
     const FREE_LIMIT = 5;
-    const totalGoals = state.items.length;
+    const totalGoals = state.items.filter(g => g.isActive !== false).length;
     if (!subscriptionActive && totalGoals >= FREE_LIMIT) {
       setShowUpgrade(true);
       return;
@@ -379,17 +434,18 @@ export default function Goals() {
         text: newGoal.text,
         done: newGoal.done,
         period: state.currentPeriod,
-        startDate: newGoal.startDate,
-        endDate: newGoal.endDate,
-        category: newGoal.category ?? category
+        startDate: dates.start,
+        endDate: dates.end,
+        category: newGoal.category ?? category,
+        isActive: true
       };
       
       setState((s) => ({ ...s, items: [localGoal, ...s.items] }));
       setText("");
       setCategory("");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar meta:', error);
-      alert('Erro ao criar meta. Tente novamente.');
+      alert(error?.message || 'Erro ao criar meta. Tente novamente.');
     }
   }
 
@@ -412,12 +468,18 @@ export default function Goals() {
   }
 
   function remove(id: string) {
-    const prev = state.items;
-    setState((s) => ({ ...s, items: s.items.filter((g) => g.id !== id) }));
+    const prevItems = state.items;
+    // Remove locally first (optimistic update)
+    setState((s) => ({ 
+      ...s, 
+      items: s.items.filter((g) => g.id !== id)
+    }));
+    // Call DELETE endpoint on backend
     deleteGoal(id).catch((err) => {
       console.error('Erro ao remover meta:', err);
       // revert on error
-      setState((s) => ({ ...s, items: prev }));
+      setState((s) => ({ ...s, items: prevItems }));
+      alert('Falha ao remover meta. Tente novamente.');
     });
   }
 
@@ -714,10 +776,11 @@ export default function Goals() {
                       </div>
                       <button
                         onClick={() => remove(goal.id)}
-                        className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 cursor-pointer"
+                        className="text-red-600 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 cursor-pointer font-bold text-lg leading-none"
                         aria-label="Remover meta"
+                        title="Remover meta"
                       >
-                        🗑️
+                        X
                       </button>
                     </div>
                   ))}

@@ -2,6 +2,12 @@
 import { useNavigate } from "react-router-dom";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
+import { useMemo } from "react";
+import DatePicker, { registerLocale } from "react-datepicker";
+import { ptBR } from "date-fns/locale";
+import "react-datepicker/dist/react-datepicker.css";
+
+registerLocale("pt-BR", ptBR);
 
 /**
  * Perfil/Preferências – Atualizado
@@ -26,12 +32,16 @@ export default function Preferences() {
 
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [birthDateObj, setBirthDateObj] = useState<Date | null>(null);
   const [lang, setLang] = useState<Lang>("pt");
   const [notifyWeekly, setNotifyWeekly] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  // Datepicker bounds (16–80 anos)
+  // Helpers removed (react-datepicker uses Date objects for bounds)
 
   useEffect(() => {
     loadPreferences();
@@ -41,7 +51,7 @@ export default function Preferences() {
   function validateAge(birthDateString: string): boolean {
     if (!birthDateString) return false;
     
-    const birthDate = new Date(birthDateString);
+    const birthDate = (() => { const m = birthDateString.match(/^(\\d{4})-(\\d{2})-(\\d{2})/); return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null; })();
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -84,7 +94,9 @@ export default function Preferences() {
         if (response.ok) {
           const data: UserPreferences = await response.json();
           setName(data.name || "");
-          setBirthDate(data.birthDate || "");
+          const bd = data.birthDate || "";
+          setBirthDate(bd);
+          setBirthDateObj(bd ? new Date(bd) : null);
         }
       }
 
@@ -216,23 +228,27 @@ export default function Preferences() {
                     Data de Nascimento 
                     <span className="text-red-500 text-xs">*obrigatório</span>
                   </label>
-                  <input
+                  <DatePicker
                     id="birthDate"
-                    type="date"
-                    value={birthDate}
-                    onChange={(e) => {
-                      setBirthDate(e.target.value);
-                      if (errors.birthDate) {
-                        setErrors(prev => ({ ...prev, birthDate: '' }));
-                      }
+                    selected={birthDateObj}
+                    onChange={(date: Date | null) => {
+                      setBirthDateObj(date);
+                      const iso = date ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}` : "";
+                      setBirthDate(iso);
+                      if (errors.birthDate) setErrors(prev => ({ ...prev, birthDate: '' }));
                     }}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="dd/mm/aaaa"
+                    locale="pt-BR"
                     className={`w-full h-12 rounded-xl border px-4 outline-none focus:ring-2 transition-all ${
-                      errors.birthDate 
-                        ? 'border-red-500 focus:ring-red-500' 
-                        : 'border-gray-200 focus:ring-[#41B36E] focus:border-transparent'
+                      errors.birthDate ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-[#41B36E] focus:border-transparent'
                     }`}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    maxDate={useMemo(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 16); return d; }, [])}
+                    minDate={useMemo(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 80); return d; }, [])}
                     disabled={loading}
-                    required
                   />
                   {errors.birthDate && (
                     <p className="text-sm text-red-500 flex items-center gap-1">
@@ -328,8 +344,17 @@ export default function Preferences() {
                   <span>←</span>
                   Voltar
                 </button>
-              </div>
+                <button
+                  onClick={() => navigate('/subscriptions')}
+                  className="h-12 rounded-xl border-2 border-[#2F6C92] text-[#2F6C92] font-semibold px-6 hover:bg-[#F3F4F6] hover:border-[#2F6C92] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-2.21 0-4 1.79-4 4m8 0a4 4 0 01-4 4m0-8a8 8 0 100 16 8 8 0 000-16z" />
+                  </svg>
+                  Gerenciar Assinatura
+                </button>
             </div>
+          </div>
           </div>
 
           {message && (

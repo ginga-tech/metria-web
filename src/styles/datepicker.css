@@ -1,0 +1,88 @@
+/* LifeBalance theme overrides for react-datepicker */
+
+.react-datepicker-popper { z-index: 50; }
+
+.react-datepicker {
+  border: 1px solid #E5E7EB; /* gray-200 */
+  border-radius: 0.75rem; /* rounded-xl */
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 15px -3px rgba(15,23,42,.08), 0 4px 6px -4px rgba(15,23,42,.06);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans,
+    Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+.react-datepicker__triangle { display: none; }
+
+.react-datepicker__header {
+  background: #fff;
+  border-bottom: 1px solid rgba(47,108,146,0.08); /* brand blue at low opacity */
+  padding-top: 0.75rem;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  color: #2F6C92; /* brand blue */
+  font-weight: 600;
+}
+
+.react-datepicker__day-name,
+.react-datepicker__day,
+.react-datepicker__time-name {
+  width: 2rem;
+  line-height: 2rem;
+  margin: 0.1rem;
+  color: #2F6C92; /* brand blue */
+  border-radius: 0.5rem; /* rounded */
+}
+
+/* Hover */
+.react-datepicker__day:hover {
+  background: #F3F4F6; /* gray-100 */
+}
+
+/* Selected / keyboard-selected */
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected,
+.react-datepicker__month-text--selected,
+.react-datepicker__quarter-text--selected,
+.react-datepicker__year-text--selected {
+  color: #fff;
+  background: linear-gradient(90deg, #41B36E, #10B981); /* brand green gradient */
+}
+
+/* Today ring */
+.react-datepicker__day--today {
+  outline: 1px solid rgba(47,108,146,0.35);
+  outline-offset: -1px;
+}
+
+/* Outside month */
+.react-datepicker__day--outside-month {
+  color: rgba(47,108,146,0.35);
+}
+
+/* Disabled */
+.react-datepicker__day--disabled,
+.react-datepicker__day--disabled:hover {
+  color: #CBD5E1; /* slate-300 */
+  background: transparent;
+  cursor: not-allowed;
+}
+
+/* Navigation arrows */
+.react-datepicker__navigation-icon::before {
+  border-color: #2F6C92; /* brand blue */
+}
+
+/* Dropdowns */
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+  border: 1px solid #E5E7EB; /* gray-200 */
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  color: #2F6C92;
+  background: #fff;
+}
+

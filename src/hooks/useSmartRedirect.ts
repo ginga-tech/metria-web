@@ -82,7 +82,8 @@ export function useSmartRedirect() {
           }
           
           // Se não tem assessment e não está na página de assessment, redireciona
-          if (!status.hasAssessment && currentPath !== '/assessment' && currentPath !== '/' && currentPath !== '/login') {
+          // TEMPORÁRIO: Permite acesso às metas mesmo sem assessment para teste
+          if (!status.hasAssessment && currentPath !== '/assessment' && currentPath !== '/' && currentPath !== '/login' && currentPath !== '/goals') {
             navigate('/assessment', { replace: true });
             return;
           }

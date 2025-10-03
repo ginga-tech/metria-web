@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import lifeBalanceLogo from "../assets/lifebalance-logo.svg";
 import Tooltip from "../components/Tooltip";
@@ -18,7 +18,7 @@ export default function ForgotPassword() {
     const eTrim = email.trim();
 
     if (!emailRegex.test(eTrim)) {
-      setError("Por favor, insira um e-mail válido");
+      setError("Por favor, insira um e-mail vÃ¡lido");
       return;
     }
 
@@ -37,17 +37,17 @@ export default function ForgotPassword() {
 
       if (response.ok) {
         setIsSuccess(true);
-        setMessage("E-mail de recuperação enviado! Verifique sua caixa de entrada e spam.");
+        setMessage("E-mail de recuperaÃ§Ã£o enviado! Verifique sua caixa de entrada e spam.");
       } else {
-        const errorData = await response.text();
+        await response.text();
         if (response.status === 404) {
-          setError("E-mail não encontrado em nossa base de dados.");
+          setError("E-mail nÃ£o encontrado em nossa base de dados.");
         } else {
-          setError("Erro ao enviar e-mail de recuperação. Tente novamente.");
+          setError("Erro ao enviar e-mail de recuperaÃ§Ã£o. Tente novamente.");
         }
       }
     } catch (err) {
-      setError("Erro de conexão. Verifique sua internet e tente novamente.");
+      setError("Erro de conexÃ£o. Verifique sua internet e tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -75,17 +75,17 @@ export default function ForgotPassword() {
               E-mail Enviado!
             </h2>
             <p className="text-[#2F6C92]/80 text-sm">
-              Enviamos um link de recuperação para <strong>{email}</strong>
+              Enviamos um link de recuperaÃ§Ã£o para <strong>{email}</strong>
             </p>
           </div>
 
           <div className="bg-[#F3F4F6] rounded-xl p-4 mb-6 text-left">
-            <h3 className="font-medium text-[#2F6C92] mb-2">Próximos passos:</h3>
+            <h3 className="font-medium text-[#2F6C92] mb-2">PrÃ³ximos passos:</h3>
             <ul className="text-sm text-[#2F6C92]/80 space-y-1">
-              <li>• Verifique sua caixa de entrada</li>
-              <li>• Verifique a pasta de spam/lixo eletrônico</li>
-              <li>• Clique no link para redefinir sua senha</li>
-              <li>• O link expira em 1 hora</li>
+              <li>â€¢ Verifique sua caixa de entrada</li>
+              <li>â€¢ Verifique a pasta de spam/lixo eletrÃ´nico</li>
+              <li>â€¢ Clique no link para redefinir sua senha</li>
+              <li>â€¢ O link expira em 1 hora</li>
             </ul>
           </div>
 
@@ -153,7 +153,7 @@ export default function ForgotPassword() {
                     : "border-[#2F6C92]/20 focus:ring-[#41B36E]"
                 }`}
                 placeholder="voce@exemplo.com"
-                title="Por favor, insira um endereço de e-mail válido"
+                title="Por favor, insira um endereÃ§o de e-mail vÃ¡lido"
               />
               {error && (
                 <Tooltip content={error} type="error" position="bottom">
@@ -172,7 +172,7 @@ export default function ForgotPassword() {
             disabled={isLoading}
             className="w-full h-11 rounded-xl bg-[#41B36E] text-white font-medium hover:brightness-95 transition disabled:opacity-60"
           >
-            {isLoading ? "Enviando..." : "Enviar Link de Recuperação"}
+            {isLoading ? "Enviando..." : "Enviar Link de RecuperaÃ§Ã£o"}
           </button>
         </form>
 
@@ -198,7 +198,7 @@ export default function ForgotPassword() {
             onClick={() => navigate("/")}
             className="text-sm text-[#F96B11] hover:underline font-medium"
           >
-            ← Voltar ao Login
+            â† Voltar ao Login
           </button>
         </div>
       </div>
