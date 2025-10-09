@@ -56,6 +56,21 @@ export async function createCustomerPortal(): Promise<{ url: string }> {
   return r.json();
 }
 
+// Reconcile subscription for current user or by provided identifiers
+export async function syncSubscription(payload?: { email?: string; subscriptionId?: string; customerId?: string }): Promise<{ ok: boolean; subId?: string; status?: string; plan?: string }> {
+  if (!API_BASE) throw new Error('API base URL não configurada');
+  const r = await fetch(`${API_BASE}/api/billing/sync`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload ?? {}),
+  });
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error(t || 'Falha ao sincronizar assinatura');
+  }
+  return r.json();
+}
+
 // List all subscriptions for the current user
 export type SubscriptionRecord = {
   id?: string;

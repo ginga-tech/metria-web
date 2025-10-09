@@ -12,6 +12,7 @@ import {
 import UserMenu from "../components/UserMenu";
 import TipsModal from "../components/TipsModal";
 import { useUser } from "../hooks/useUser";
+import { getSubscriptionStatus } from "../services/billingService";
 
 type Scores = Record<string, number>;
 
@@ -106,6 +107,7 @@ export default function DashboardReordered() {
   const [tipsOpen, setTipsOpen] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState("");
   const [selectedTips, setSelectedTips] = useState<string[]>([]);
+  const [showSubBanner, setShowSubBanner] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -142,6 +144,29 @@ export default function DashboardReordered() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  // Banner: assinatura ativada após retorno do Checkout
+  useEffect(() => {
+    try {
+      // Se App.tsx marcou a flag, exibe e consome
+      const flag = sessionStorage.getItem('lb_show_sub_banner');
+      if (flag === '1') {
+        setShowSubBanner(true);
+        sessionStorage.removeItem('lb_show_sub_banner');
+        return;
+      }
+      // Alternativa: se veio de ?checkout=success, checa status atual
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('checkout') === 'success') {
+        (async () => {
+          try {
+            const info = await getSubscriptionStatus();
+            if (info?.active) setShowSubBanner(true);
+          } catch {}
+        })();
+      }
+    } catch {}
   }, []);
 
   const chartData = useMemo(() => {
@@ -219,6 +244,25 @@ export default function DashboardReordered() {
             <UserMenu userEmail={user?.email} userName={user?.name} />
           </div>
         </header>
+
+        {showSubBanner && (
+          <div className="mb-6 rounded-xl border border-green-300 bg-green-50 p-4 shadow-sm" role="alert" aria-live="polite">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2 text-green-800">
+                <span className="text-xl">🎉</span>
+                <p className="text-sm"><span className="font-semibold">Assinatura ativa!</span> Recursos premium liberados.</p>
+              </div>
+              <button
+                onClick={() => setShowSubBanner(false)}
+                className="h-8 w-8 inline-flex items-center justify-center rounded-full text-green-800 hover:bg-green-100"
+                aria-label="Fechar aviso"
+                title="Fechar"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 rounded-2xl bg-white border-l-4 border-red-500 text-red-700 p-4 shadow-sm">

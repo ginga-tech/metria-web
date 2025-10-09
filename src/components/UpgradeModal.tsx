@@ -29,11 +29,11 @@ export default function UpgradeModal({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full mx-4 sm:mx-6 border border-gray-100"
+        className="relative bg-[#F7FAFF] rounded-2xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full mx-4 sm:mx-6 border border-gray-100"
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-[#2F6C92]/60 hover:text-[#2F6C92] transition-colors p-2 rounded-lg hover:bg-[#F3F4F6]"
+          className="absolute top-4 right-4 text-[#2F6C92]/60 hover:text-[#2F6C92] transition-colors p-2 rounded-lg hover:bg-[#2F6C92]/10 focus:outline-none focus:ring-2 focus:ring-[#2F6C92]/30"
           aria-label="Fechar"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -70,7 +70,7 @@ export default function UpgradeModal({
             <button
               onClick={onChooseMonthly}
               disabled={disabled}
-              className="p-4 rounded-2xl border-2 border-[#2F6C92] text-[#2F6C92] hover:bg-[#2F6C92] hover:text-white transition-colors font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md active:scale-[0.99]"
+              className="p-4 rounded-2xl border-2 border-[#2F6C92] text-[#2F6C92] bg-[#F7FAFF] hover:bg-[#2F6C92] hover:text-white hover:border-[#245471] transition-colors font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-[#2F6C92]/30"
             >
               Plano Mensal
               <div className="text-sm font-medium opacity-80 mt-1">{monthlyPriceLabel}</div>
@@ -79,7 +79,7 @@ export default function UpgradeModal({
             <button
               onClick={onChooseAnnual}
               disabled={disabled}
-              className="p-4 rounded-2xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white hover:from-[#10B981] hover:to-[#41B36E] transition-colors font-semibold cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:scale-[0.99]"
+              className="p-4 rounded-2xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white hover:from-[#34C77F] hover:to-[#0FB07D] hover:brightness-110 transition-colors font-semibold cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-[#41B36E]/30"
             >
               Plano Anual
               <div className="text-sm font-medium opacity-90 mt-1">{annualPriceLabel}</div>
@@ -93,7 +93,7 @@ export default function UpgradeModal({
           </div>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            <button onClick={onClose} className="flex-1 h-11 rounded-xl border border-[#2F6C92]/20 text-[#2F6C92] font-medium hover:bg-[#F3F4F6] transition-colors">
+            <button onClick={onClose} className="flex-1 h-11 rounded-xl border border-[#2F6C92]/20 text-[#2F6C92] font-medium bg-[#F7FAFF] hover:bg-[#E9F2F8] hover:border-[#2F6C92]/30 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2F6C92]/20">
               Continuar no gratuito
             </button>
           </div>
