@@ -32,24 +32,60 @@ function CheckoutAutoClose() {
           // ignore postMessage errors
         }
 
-        // Fallback: se não é popup (mesma aba), e houve sucesso, iniciar sync + polling leve
+        // Fallback: se não é popup (mesma aba), e houve sucesso, iniciar sync + polling mais agressivo
         if (checkout === 'success') {
-          // Tenta sincronizar no backend (corrige casos de email divergente no Payment Link)
-          (async () => { try { await syncSubscription(); } catch {} })();
+          console.log('🎉 Checkout success detected, starting subscription sync...');
+          
+          // Tenta sincronizar imediatamente
+          (async () => { 
+            try { 
+              console.log('🔄 Attempting immediate sync...');
+              const result = await syncSubscription(); 
+              console.log('✅ Immediate sync result:', result);
+            } catch (error) {
+              console.log('❌ Immediate sync failed:', error);
+            }
+          })();
+          
           const started = Date.now();
-          const timeoutMs = 2 * 60 * 1000; // 2 minutos
-          const interval = 3000; // 3s
+          const timeoutMs = 5 * 60 * 1000; // 5 minutos (aumentado)
+          const interval = 2000; // 2s (mais frequente)
+          let attempts = 0;
+          const maxAttempts = 150; // 5 minutos / 2s = 150 tentativas
+          
           const poll = window.setInterval(async () => {
+            attempts++;
+            console.log(`🔍 Polling attempt ${attempts}/${maxAttempts}...`);
+            
             try {
+              // Primeiro tenta sync novamente
+              if (attempts % 5 === 0) { // A cada 10 segundos
+                console.log('🔄 Attempting sync again...');
+                try {
+                  await syncSubscription();
+                } catch (syncError) {
+                  console.log('❌ Sync retry failed:', syncError);
+                }
+              }
+              
+              // Verifica status
               const info = await getSubscriptionStatus();
+              console.log('📊 Subscription status:', info);
+              
               if (info?.active) {
+                console.log('🎉 Subscription activated! Stopping polling.');
                 try { sessionStorage.setItem('lb_show_sub_banner', '1'); } catch {}
                 window.clearInterval(poll);
-              } else if (Date.now() - started > timeoutMs) {
+                // Força reload da página para atualizar UI
+                window.location.reload();
+              } else if (Date.now() - started > timeoutMs || attempts >= maxAttempts) {
+                console.log('⏰ Polling timeout reached. Stopping.');
                 window.clearInterval(poll);
               }
-            } catch {
-              if (Date.now() - started > timeoutMs) {
+            } catch (error) {
+              console.log('❌ Polling error:', error);
+              if (Date.now() - started > timeoutMs || attempts >= maxAttempts) {
+                console.log('⏰ Polling timeout reached after error. Stopping.');
                 window.clearInterval(poll);
               }
             }
@@ -59,6 +95,44 @@ function CheckoutAutoClose() {
     } catch {
       // ignore
     }
+    // Also listen for popup messages globally and trigger sync + polling
+    function onMessage(e: MessageEvent) {
+      try {
+        if (e.origin !== window.location.origin) return;
+        const data: any = e.data || {};
+        if (data?.type === 'lb:checkout') {
+          (async () => {
+            if (data?.status === 'success') {
+              try { await syncSubscription(); } catch {}
+            }
+            // Start a short polling period to reflect state
+            const started = Date.now();
+            const timeoutMs = 2 * 60 * 1000;
+            const interval = 2000;
+            const poll = window.setInterval(async () => {
+              try {
+                const info = await getSubscriptionStatus();
+                if (info?.active) {
+                  window.clearInterval(poll);
+                  try { sessionStorage.setItem('lb_show_sub_banner', '1'); } catch {}
+                  window.location.reload();
+                } else if (Date.now() - started > timeoutMs) {
+                  window.clearInterval(poll);
+                }
+              } catch {
+                if (Date.now() - started > timeoutMs) {
+                  window.clearInterval(poll);
+                }
+              }
+            }, interval);
+          })();
+        }
+      } catch {
+        // ignore
+      }
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
   }, []);
   return null as any;
 }
