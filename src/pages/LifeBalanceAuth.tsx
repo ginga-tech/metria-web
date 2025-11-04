@@ -72,15 +72,39 @@ export default function LifeBalanceAuth() {
   try {
     setIsLoading(true);
     setMessage(null);
+    let token = '';
     if (mode === "login") {
       const res = await login({ email: eTrim, password: p });
-      localStorage.setItem("lb_token", (res.token || '').replace(/^Bearer\s+/i, ''));
+      token = (res.token || '').replace(/^Bearer\s+/i, '');
+      localStorage.setItem("lb_token", token);
     } else {
       const res = await signup({ name: name.trim(), email: eTrim, password: p });
-      localStorage.setItem("lb_token", (res.token || '').replace(/^Bearer\s+/i, ''));
+      token = (res.token || '').replace(/^Bearer\s+/i, '');
+      localStorage.setItem("lb_token", token);
     }
     setMessage("Autenticação realizada com sucesso!");
-    navigate("/assessment");
+    
+    // Verificar status do usuário antes de redirecionar
+    try {
+      const API = import.meta.env.VITE_API_BASE_URL as string;
+      const statusResponse = await fetch(`${API}/api/user/status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (statusResponse.ok) {
+        const status = await statusResponse.json();
+        // Se já tem assessment, vai para dashboard. Caso contrário, vai para assessment
+        navigate(status.hasAssessment ? "/dashboard" : "/assessment");
+      } else {
+        // Se falhar ao verificar status, redireciona para assessment por segurança
+        navigate("/assessment");
+      }
+    } catch {
+      // Em caso de erro, redireciona para assessment
+      navigate("/assessment");
+    }
   } catch (err: any) {
     const errorMessage = err?.message ?? "Erro ao realizar autenticação";
     // Traduzir mensagens de erro comuns da API
@@ -105,9 +129,31 @@ export default function LifeBalanceAuth() {
       setMessage(null);
       const token = await loginWithGoogle();
       if (token) {
-        localStorage.setItem("lb_token", token.replace(/^Bearer\s+/i, ''));
+        const cleanToken = token.replace(/^Bearer\s+/i, '');
+        localStorage.setItem("lb_token", cleanToken);
         setMessage("Login com Google realizado com sucesso!");
-        navigate("/assessment");
+        
+        // Verificar status do usuário antes de redirecionar
+        try {
+          const API = import.meta.env.VITE_API_BASE_URL as string;
+          const statusResponse = await fetch(`${API}/api/user/status`, {
+            headers: {
+              'Authorization': `Bearer ${cleanToken}`
+            }
+          });
+          
+          if (statusResponse.ok) {
+            const status = await statusResponse.json();
+            // Se já tem assessment, vai para dashboard. Caso contrário, vai para assessment
+            navigate(status.hasAssessment ? "/dashboard" : "/assessment");
+          } else {
+            // Se falhar ao verificar status, redireciona para assessment por segurança
+            navigate("/assessment");
+          }
+        } catch {
+          // Em caso de erro, redireciona para assessment
+          navigate("/assessment");
+        }
       }
     } catch (err: any) {
       const errorMessage = err?.message || "Erro ao fazer login com Google";
