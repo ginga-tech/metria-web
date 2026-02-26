@@ -5,6 +5,7 @@ import metriaLogo from "../assets/metria-logo.svg";
 import Tooltip from "../components/Tooltip";
 import OAuthModal from "../components/OAuthModal";
 import { useGoogleOAuth } from "../hooks/useGoogleOAuth";
+import { getApiBaseUrl } from "../lib/api";
 
 /**
  * Metria - Tela de Login/Cadastro (MVP)
@@ -86,7 +87,7 @@ export default function MetriaAuth() {
     
     // Verificar status do usuário antes de redirecionar
     try {
-      const API = import.meta.env.VITE_API_BASE_URL as string;
+      const API = getApiBaseUrl();
       const statusResponse = await fetch(`${API}/api/user/status`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -135,7 +136,7 @@ export default function MetriaAuth() {
         
         // Verificar status do usuário antes de redirecionar
         try {
-          const API = import.meta.env.VITE_API_BASE_URL as string;
+          const API = getApiBaseUrl();
           const statusResponse = await fetch(`${API}/api/user/status`, {
             headers: {
               'Authorization': `Bearer ${cleanToken}`

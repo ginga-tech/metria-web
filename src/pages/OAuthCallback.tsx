@@ -1,5 +1,6 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getApiBaseUrl } from "../lib/api";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ export default function OAuthCallback() {
 
           if (!alreadyForwarded) {
             try { sessionStorage.setItem(forwardedCodeKey, code); } catch {}
-            const API = import.meta.env.VITE_API_BASE_URL as string;
+            const API = getApiBaseUrl();
             const backendCallbackUrl = new URL(`${API}/api/auth/google/callback`);
             backendCallbackUrl.searchParams.set('code', code);
             if (state) backendCallbackUrl.searchParams.set('state', state);

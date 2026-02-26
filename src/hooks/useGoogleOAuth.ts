@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { getApiBaseUrl } from '../lib/api';
 
 interface UseGoogleOAuthResult {
   isLoading: boolean;
@@ -15,12 +16,12 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
     setError(null);
 
     try {
-      const API = import.meta.env.VITE_API_BASE_URL as string;
-      // FORÇA a porta 5173 para evitar problemas com configuração do Google Console
+      const API = getApiBaseUrl();
+      // FORÃ‡A a porta 5173 para evitar problemas com configuraÃ§Ã£o do Google Console
       const redirectUri = `http://localhost:5173/oauth/callback`;
       const authUrl = `${API}/api/auth/google/start?redirectUri=${encodeURIComponent(redirectUri)}`;
 
-      // Configurações do popup
+      // ConfiguraÃ§Ãµes do popup
       const popupWidth = 500;
       const popupHeight = 600;
       const left = window.screenX + (window.outerWidth - popupWidth) / 2;
@@ -43,7 +44,7 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
             clearInterval(checkClosed);
             window.removeEventListener('message', messageHandler);
             setIsLoading(false);
-            reject(new Error('Login cancelado pelo usuário'));
+            reject(new Error('Login cancelado pelo usuÃ¡rio'));
           }
         }, 1000);
 
@@ -52,7 +53,7 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
           // Verifica se a mensagem vem do popup
           if (event.source !== popup) return;
           
-          // Verifica se é uma mensagem OAuth
+          // Verifica se Ã© uma mensagem OAuth
           if (event.data && event.data.type === 'OAUTH_RESULT') {
             clearInterval(checkClosed);
             window.removeEventListener('message', messageHandler);
@@ -70,13 +71,13 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
         // Adiciona listener para mensagens
         window.addEventListener('message', messageHandler);
 
-        // Monitora mudanças na URL do popup (fallback)
+        // Monitora mudanÃ§as na URL do popup (fallback)
         const checkAuth = setInterval(() => {
           try {
             // Tenta acessar a URL do popup
             const popupUrl = popup.location.href;
             
-            // Se conseguiu acessar, significa que está no mesmo domínio
+            // Se conseguiu acessar, significa que estÃ¡ no mesmo domÃ­nio
             if (popupUrl.includes('localhost:5173')) {
               const url = new URL(popupUrl);
               
@@ -94,7 +95,7 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
                 return;
               }
 
-              // Verifica se tem código para trocar por token
+              // Verifica se tem cÃ³digo para trocar por token
               const code = url.searchParams.get('code');
               // Se ha codigo na rota de callback, deixa a pagina OAuthCallback
               // concluir o fluxo e enviar postMessage para a janela pai.
@@ -114,7 +115,7 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
               }
             }
           } catch (e) {
-            // Erro de CORS - popup ainda está em domínio externo (Google)
+            // Erro de CORS - popup ainda estÃ¡ em domÃ­nio externo (Google)
             // Continua monitorando
           }
         }, 500);
@@ -128,7 +129,7 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
             popup.close();
           }
           setIsLoading(false);
-          reject(new Error('Timeout: Login demorou muito para ser concluído'));
+          reject(new Error('Timeout: Login demorou muito para ser concluÃ­do'));
         }, 300000);
       });
 
