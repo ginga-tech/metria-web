@@ -1,7 +1,7 @@
 import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
 import { useEffect } from "react";
 import { getSubscriptionStatus, syncSubscription } from "./services/billingService";
-import LifeBalanceAuth from "./pages/LifeBalanceAuth";
+import MetriaAuth from "./pages/MetriaAuth";
 import Assessment from "./pages/Assessment";
 import Dashboard from "./pages/DashboardReordered";
 import Preferences from "./pages/Preferences";
@@ -153,7 +153,7 @@ const router = createBrowserRouter([
     path: "/",
     element: <Layout />,
     children: [
-      { index: true, element: <LifeBalanceAuth /> },
+      { index: true, element: <MetriaAuth /> },
       { 
         path: "assessment", 
         element: (

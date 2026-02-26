@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import { login, signup } from "../services/authService";
 import { useNavigate } from "react-router-dom";
-import lifeBalanceLogo from "../assets/lifebalance-logo.svg";
+import metriaLogo from "../assets/metria-logo.svg";
 import Tooltip from "../components/Tooltip";
 import OAuthModal from "../components/OAuthModal";
 import { useGoogleOAuth } from "../hooks/useGoogleOAuth";
 
 /**
- * LifeBalance - Tela de Login/Cadastro (MVP)
+ * Metria - Tela de Login/Cadastro (MVP)
  * Paleta: Azul #2F6C92 | Verde #41B36E | Laranja #F96B11 | Cinza #F3F4F6
  */
 
-export default function LifeBalanceAuth() {
+export default function MetriaAuth() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -168,8 +168,8 @@ export default function LifeBalanceAuth() {
           <div className="relative z-10 w-full max-w-[360px] text-[#6B3D0C]">
             <div className="flex justify-center mb-8">
               <img
-                src={lifeBalanceLogo}
-                alt="LifeBalance"
+                src={metriaLogo}
+                alt="metria"
                 className="w-48 sm:w-56 drop-shadow-lg"
               />
             </div>
