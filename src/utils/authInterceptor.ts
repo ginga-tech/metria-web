@@ -80,7 +80,11 @@ export async function validateToken(): Promise<boolean> {
     if (!token) return false;
 
     const API = import.meta.env.VITE_API_BASE_URL as string;
-    const response = await fetch(`${API}/api/me`);
+    const response = await fetch(`${API}/api/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
 
     return response.ok;
   } catch (error) {

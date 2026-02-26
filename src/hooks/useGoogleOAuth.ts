@@ -96,26 +96,12 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
 
               // Verifica se tem código para trocar por token
               const code = url.searchParams.get('code');
+              // Se ha codigo na rota de callback, deixa a pagina OAuthCallback
+              // concluir o fluxo e enviar postMessage para a janela pai.
               if (code) {
-                clearInterval(checkAuth);
-                clearInterval(checkClosed);
-                window.removeEventListener('message', messageHandler);
-                popup.close();
-                
-                // Troca código por token
-                exchangeCodeForToken(code)
-                  .then(token => {
-                    setIsLoading(false);
-                    resolve(token);
-                  })
-                  .catch(err => {
-                    setIsLoading(false);
-                    reject(err);
-                  });
                 return;
               }
 
-              // Verifica se há erro
               const error = url.searchParams.get('error');
               if (error) {
                 clearInterval(checkAuth);
@@ -161,23 +147,3 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
   };
 }
 
-async function exchangeCodeForToken(code: string): Promise<string> {
-  const API = import.meta.env.VITE_API_BASE_URL as string;
-  // FORÇA a porta 5173 para manter consistência
-  const redirectUri = `http://localhost:5173/oauth/callback`;
-  
-  const response = await fetch(`${API}/api/auth/google/callback`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ code, redirectUri }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Erro ao trocar código por token');
-  }
-
-  const data = await response.json();
-  return data.token;
-}

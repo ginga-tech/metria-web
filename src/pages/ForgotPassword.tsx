@@ -41,7 +41,7 @@ export default function ForgotPassword() {
       } else {
         await response.text();
         if (response.status === 404) {
-          setError("E-mail nÃ£o encontrado em nossa base de dados.");
+          setError("Recuperacao de senha indisponivel no backend atual.");
         } else {
           setError("Erro ao enviar e-mail de recuperaÃ§Ã£o. Tente novamente.");
         }

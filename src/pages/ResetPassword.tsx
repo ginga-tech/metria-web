@@ -42,7 +42,11 @@ export default function ResetPassword() {
       setTokenValid(response.ok);
       
       if (!response.ok) {
-        setMessage("Link de recuperaÃ§Ã£o invÃ¡lido ou expirado.");
+        if (response.status === 404) {
+          setMessage("Recuperacao de senha indisponivel no backend atual.");
+        } else {
+          setMessage("Link de recuperacao invalido ou expirado.");
+        }
       }
     } catch (err) {
       setTokenValid(false);
@@ -84,8 +88,10 @@ export default function ResetPassword() {
         setMessage("Senha redefinida com sucesso!");
       } else {
         await response.text();
-        if (response.status === 400) {
-          setMessage("Link de recuperaÃ§Ã£o invÃ¡lido ou expirado.");
+        if (response.status === 404) {
+          setMessage("Recuperacao de senha indisponivel no backend atual.");
+        } else if (response.status === 400) {
+          setMessage("Link de recuperacao invalido ou expirado.");
         } else {
           setMessage("Erro ao redefinir senha. Tente novamente.");
         }

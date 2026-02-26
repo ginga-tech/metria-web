@@ -1,6 +1,5 @@
 ﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { exchangeGoogleCode } from "../services/authService";
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
@@ -49,6 +48,7 @@ export default function OAuthCallback() {
         
         if (token) {
           console.log('Token encontrado:', token.substring(0, 20) + '...');
+          try { sessionStorage.removeItem('oauth_google_forwarded_code'); } catch {}
           
           if (isPopup) {
             // Se está em popup, envia mensagem para a janela pai
@@ -74,26 +74,30 @@ export default function OAuthCallback() {
         // Se não tem token, tenta processar o código de autorização
         const code = url.searchParams.get('code');
         if (code) {
-          console.log('Código de autorização encontrado, trocando por token');
-          setError(null);
-          try {
-            const res = await exchangeGoogleCode(code);
-            console.log('Token obtido com sucesso via código');
-            localStorage.setItem('lb_token', (res.token || '').replace(/^Bearer\s+/i, ''));
-            // Pequeno delay para garantir que o token foi salvo
-            setTimeout(() => {
-              navigate('/assessment', { replace: true });
-            }, 100);
-            return;
-          } catch (exchangeError: any) {
-            console.error('Erro ao trocar código por token:', exchangeError);
-            setError(`Erro ao processar código: ${exchangeError.message}`);
-            setTimeout(() => navigate('/', { replace: true }), 5000);
+          const state = url.searchParams.get('state') || '';
+          const forwardedCodeKey = 'oauth_google_forwarded_code';
+          const alreadyForwarded = (() => {
+            try { return sessionStorage.getItem(forwardedCodeKey) === code; } catch { return false; }
+          })();
+
+          if (!alreadyForwarded) {
+            try { sessionStorage.setItem(forwardedCodeKey, code); } catch {}
+            const API = import.meta.env.VITE_API_BASE_URL as string;
+            const backendCallbackUrl = new URL(`${API}/api/auth/google/callback`);
+            backendCallbackUrl.searchParams.set('code', code);
+            if (state) backendCallbackUrl.searchParams.set('state', state);
+
+            console.log('Encaminhando codigo de autorizacao para callback do backend');
+            window.location.replace(backendCallbackUrl.toString());
             return;
           }
+
+          console.error('Codigo OAuth ja foi encaminhado e retornou sem token');
+          setError('Nao foi possivel concluir o login com Google. Verifique a configuracao do backend OAuth.');
+          setTimeout(() => navigate('/', { replace: true }), 5000);
+          return;
         }
-        
-        // Verificar se há erro nos parâmetros
+
         const error = url.searchParams.get('error');
         if (error) {
           console.error('Erro OAuth retornado:', error);
