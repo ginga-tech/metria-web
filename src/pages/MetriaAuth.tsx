@@ -201,12 +201,12 @@ export default function MetriaAuth() {
         </section>
 
         <section className="rounded-[24px] border border-slate-200/80 bg-white p-6 sm:p-8 shadow-[0_20px_45px_-18px_rgba(15,23,42,0.28)] order-1">
-          <div className="mb-5 flex justify-center">
-            <div className="flex items-center justify-center">
-              <img src={metriaLogo} alt="Metria" className="h-14 sm:h-16 w-auto object-contain" />
+          <div className="mb-6 flex justify-center">
+            <div className="flex min-h-[120px] sm:min-h-[132px] items-center justify-center">
+              <img src={metriaLogo} alt="Metria" className="h-[120px] sm:h-[132px] w-auto object-contain" />
             </div>
           </div>
-          <div className="mb-6 text-center">
+          <div className="mb-5 text-center">
             <p className="text-sm font-medium text-slate-500 mb-1">
               {mode === "login" ? "Acesse sua jornada de autoconhecimento" : "Comece sua jornada de autoconhecimento"}
             </p>
