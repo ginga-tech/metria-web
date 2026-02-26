@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import lifeBalanceLogo from "../assets/lifebalance-logo.svg";
+import metriaLogo from "../assets/metria-logo.svg";
 import Tooltip from "../components/Tooltip";
 
 export default function ResetPassword() {
@@ -103,8 +103,8 @@ export default function ResetPassword() {
         <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8 text-center">
           <div className="flex justify-center mb-6">
             <img
-              src={lifeBalanceLogo}
-              alt="LifeBalance"
+              src={metriaLogo}
+              alt="Metria"
               className="w-32 drop-shadow-lg"
             />
           </div>
@@ -121,8 +121,8 @@ export default function ResetPassword() {
         <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8 text-center">
           <div className="flex justify-center mb-6">
             <img
-              src={lifeBalanceLogo}
-              alt="LifeBalance"
+              src={metriaLogo}
+              alt="Metria"
               className="w-32 drop-shadow-lg"
             />
           </div>
@@ -166,8 +166,8 @@ export default function ResetPassword() {
         <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8 text-center">
           <div className="flex justify-center mb-6">
             <img
-              src={lifeBalanceLogo}
-              alt="LifeBalance"
+              src={metriaLogo}
+              alt="Metria"
               className="w-32 drop-shadow-lg"
             />
           </div>
@@ -202,8 +202,8 @@ export default function ResetPassword() {
       <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8">
         <div className="flex justify-center mb-6">
           <img
-            src={lifeBalanceLogo}
-            alt="LifeBalance"
+            src={metriaLogo}
+            alt="Metria"
             className="w-32 drop-shadow-lg"
           />
         </div>

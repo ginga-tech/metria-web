@@ -55,7 +55,7 @@ export default function GlobalLoader() {
           
           {/* Texto opcional */}
           <div className="text-center">
-            <p className="text-sm font-medium text-[#2F6C92]">LifeBalance</p>
+            <p className="text-sm font-medium text-[#2F6C92]">Metria</p>
           </div>
         </div>
       </div>

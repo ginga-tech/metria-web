@@ -54,7 +54,7 @@ public class SubscriptionSyncResult
 Modify existing backend webhook processing and add enhanced error handling mechanisms.
 
 **Modified Files:**
-- `C:\repos\lifebalance-project\LifeBalance\src\LifeBalance.Api\Program.cs`
+- `C:\repos\metria-project\metria\src\metria.Api\Program.cs`
   - Enhance webhook endpoint with better error handling and logging
   - Add webhook processing retry mechanism
   - Improve subscription sync endpoint with enhanced error recovery
@@ -62,12 +62,12 @@ Modify existing backend webhook processing and add enhanced error handling mecha
   - Implement idempotency for webhook events
 
 **New Files:**
-- `C:\repos\lifebalance-project\LifeBalance\src\LifeBalance.Api\Services\IWebhookProcessingService.cs`
+- `C:\repos\metria-project\metria\src\metria.Api\Services\IWebhookProcessingService.cs`
   - Interface for webhook processing service
-- `C:\repos\lifebalance-project\LifeBalance\src\LifeBalance.Api\Services\WebhookProcessingService.cs`
+- `C:\repos\metria-project\metria\src\metria.Api\Services\WebhookProcessingService.cs`
   - Dedicated service for handling webhook processing logic
   - Implements retry mechanisms and error recovery
-- `C:\repos\lifebalance-project\LifeBalance\src\LifeBalance.Api\Models\WebhookEvent.cs`
+- `C:\repos\metria-project\metria\src\metria.Api\Models\WebhookEvent.cs`
   - Model for tracking webhook processing status and history
 
 **Frontend Files (Minor Updates):**

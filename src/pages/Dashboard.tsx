@@ -13,7 +13,7 @@ import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
 
 /**
- * LifeBalance – Dashboard Melhorado
+ * Metria – Dashboard Melhorado
  * - Design moderno com cards informativos
  * - Múltiplas visualizações dos dados
  * - Sugestões personalizadas

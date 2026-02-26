@@ -1,13 +1,13 @@
 ﻿import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import lifeBalanceLogo from "../assets/lifebalance-logo.svg";
+import metriaLogo from "../assets/metria-logo.svg";
 import "../styles/slider.css";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
 import { DIMENSIONS, type DimensionKey } from "../constants/assessment";
 
 /**
- * LifeBalance — Autoavaliação (10 dimensões)
+ * metria — Autoavaliação (10 dimensões)
  * Stack: React + TailwindCSS
  * Fluxo: usuário avalia 1–5 cada dimensão e envia → salva no backend e navega p/ dashboard
  * Paleta: Azul #2F6C92 | Verde #41B36E | Laranja #F96B11 | Cinza #F3F4F6 | Branco #FFFFFF
@@ -186,8 +186,8 @@ export default function Assessment() {
           <div className="relative z-10 w-full max-w-[400px] text-[#6B3D0C]">
             <div className="flex justify-center mb-8">
               <img
-                src={lifeBalanceLogo}
-                alt="LifeBalance"
+                src={metriaLogo}
+                alt="metria"
                 className="w-48 sm:w-56 drop-shadow-lg"
               />
             </div>
@@ -272,7 +272,7 @@ export default function Assessment() {
               >
                 {isSubmitting 
                   ? (isEditing ? "Salvando alterações..." : "Gerando seu Balance...") 
-                  : (isEditing ? "Salvar Alterações" : "Gerar meu LifeBalance")
+                  : (isEditing ? "Salvar Alterações" : "Gerar meu metria")
                 }
               </button>
               

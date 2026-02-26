@@ -1,4 +1,4 @@
-# LifeBalance Web — MemoryBank
+# Metria Web — MemoryBank
 
 Purpose
 - Centralize project knowledge so humans/AI can quickly ramp up.
