@@ -55,13 +55,13 @@ export default function ForgotPassword() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-        <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8 text-center">
+      <div className="relative min-h-screen grid place-items-center overflow-hidden bg-[#F2F5F8] p-4 sm:p-6">
+        <div className="relative z-10 w-full max-w-md rounded-[28px] border border-slate-200/80 bg-white p-8 text-center shadow-[0_20px_45px_-18px_rgba(15,23,42,0.25)]">
           <div className="flex justify-center mb-6">
             <img
               src={metriaLogo}
               alt="Metria"
-              className="w-32 drop-shadow-lg"
+              className="w-24"
             />
           </div>
 
@@ -74,7 +74,7 @@ export default function ForgotPassword() {
             <h2 className="text-xl font-semibold text-[#2F6C92] mb-2">
               E-mail Enviado!
             </h2>
-            <p className="text-[#2F6C92]/80 text-sm">
+            <p className="text-slate-500 text-sm leading-relaxed">
               Enviamos um link de recuperaÃ§Ã£o para <strong>{email}</strong>
             </p>
           </div>
@@ -113,18 +113,18 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-      <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8">
+    <div className="relative min-h-screen grid place-items-center overflow-hidden bg-[#F2F5F8] p-4 sm:p-6">
+      <div className="relative z-10 w-full max-w-md rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_20px_45px_-18px_rgba(15,23,42,0.25)]">
         <div className="flex justify-center mb-6">
           <img
             src={metriaLogo}
             alt="Metria"
-            className="w-32 drop-shadow-lg"
+            className="w-24"
           />
         </div>
 
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-semibold text-[#2F6C92] mb-2">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">
             Esqueceu sua senha?
           </h2>
           <p className="text-[#2F6C92]/80 text-sm">
@@ -136,7 +136,7 @@ export default function ForgotPassword() {
           <div className="grid gap-1.5">
             <label
               htmlFor="email"
-              className="text-sm font-medium text-[#2F6C92]"
+              className="text-sm font-semibold text-slate-700"
             >
               E-mail
             </label>
@@ -147,10 +147,10 @@ export default function ForgotPassword() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className={`w-full h-11 rounded-xl px-3 outline-none focus:ring-2 border ${
+                className={`w-full h-12 rounded-xl border-2 bg-slate-50 px-3 outline-none transition ${
                   error 
-                    ? "border-red-400 focus:ring-red-300 pr-10" 
-                    : "border-[#2F6C92]/20 focus:ring-[#41B36E]"
+                    ? "border-red-300 focus:ring-2 focus:ring-red-200 pr-10" 
+                    : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20"
                 }`}
                 placeholder="voce@exemplo.com"
                 title="Por favor, insira um endereÃ§o de e-mail vÃ¡lido"
@@ -170,7 +170,7 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full h-11 rounded-xl bg-[#41B36E] text-white font-medium hover:brightness-95 transition disabled:opacity-60"
+            className="w-full h-12 rounded-xl bg-[#A3E635] text-[#373D48] font-bold hover:bg-[#97d52d] transition disabled:opacity-60 shadow-lg shadow-[#A3E635]/25"
           >
             {isLoading ? "Enviando..." : "Enviar Link de RecuperaÃ§Ã£o"}
           </button>
@@ -196,7 +196,7 @@ export default function ForgotPassword() {
         <div className="mt-6 text-center">
           <button
             onClick={() => navigate("/")}
-            className="text-sm text-[#F96B11] hover:underline font-medium"
+            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-[#1E658D] hover:underline font-semibold"
           >
             â† Voltar ao Login
           </button>

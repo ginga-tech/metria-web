@@ -161,9 +161,9 @@ export default function MetriaAuth() {
     }
   }
   return (
-    <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-      <div className="w-full max-w-[980px] grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="relative overflow-hidden rounded-2xl shadow-xl bg-white flex items-center justify-center p-10 order-2 lg:order-1">
+    <div className="relative min-h-screen grid place-items-center overflow-hidden bg-[#F2F5F8] p-4 sm:p-6">
+      <div className="relative z-10 w-full max-w-[520px] grid grid-cols-1 gap-6">
+        <section className="hidden">
           <div className="absolute inset-0 bg-white" />
           <div className="relative z-10 w-full max-w-[360px] text-[#6B3D0C]">
             <div className="flex justify-center mb-8">
@@ -199,13 +199,18 @@ export default function MetriaAuth() {
           </div>
         </section>
 
-        <section className="rounded-2xl shadow-xl bg-white p-6 sm:p-8 order-1 lg:order-2">
-          <div className="mb-6">
-            <p className="text-sm text-[#2F6C92] font-medium mb-1">
-              {mode === "login" ? "Bem-vindo de volta" : "Crie sua conta"}
+        <section className="rounded-[24px] border border-slate-200/80 bg-white p-6 sm:p-8 shadow-[0_20px_45px_-18px_rgba(15,23,42,0.28)] order-1">
+          <div className="mb-5 flex justify-center">
+            <div className="flex items-center justify-center">
+              <img src={metriaLogo} alt="Metria" className="h-14 sm:h-16 w-auto object-contain" />
+            </div>
+          </div>
+          <div className="mb-6 text-center">
+            <p className="text-sm font-medium text-slate-500 mb-1">
+              {mode === "login" ? "Acesse sua jornada de autoconhecimento" : "Comece sua jornada de autoconhecimento"}
             </p>
-            <h3 className="text-2xl sm:text-3xl font-semibold text-[#2F6C92]">
-              {mode === "login" ? "Entrar" : "Cadastrar"}
+            <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              {mode === "login" ? "Bem-vindo(a) de volta" : "Crie sua conta"}
             </h3>
           </div>
 
@@ -213,7 +218,7 @@ export default function MetriaAuth() {
             <button
               onClick={handleGoogle}
               disabled={isLoading || isGoogleLoading}
-              className="inline-flex cursor-pointer items-center justify-center gap-2 h-11 rounded-xl border border-[#2F6C92]/20 bg-white hover:bg-[#F3F4F6] transition disabled:opacity-60"
+              className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition disabled:opacity-60"
             >
               {isGoogleLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#41B36E]"></div>
@@ -240,10 +245,10 @@ export default function MetriaAuth() {
 
             <div className="relative my-3">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#2F6C92]/10" />
+                <div className="w-full border-t border-slate-200" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-white px-3 text-xs text-[#2F6C92]/60">
+                <span className="bg-white px-3 text-xs font-medium uppercase tracking-[0.14em] text-slate-400">
                   ou com e-mail
                 </span>
               </div>
@@ -254,7 +259,7 @@ export default function MetriaAuth() {
                 <div className="grid gap-1.5">
                   <label
                     htmlFor="name"
-                    className="text-sm font-medium text-[#2F6C92]"
+                    className="text-sm font-semibold text-slate-700"
                   >
                     Nome
                   </label>
@@ -265,7 +270,7 @@ export default function MetriaAuth() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      className={`h-11 rounded-xl px-3 outline-none focus:ring-2 border ${errors.name ? "border-red-400 focus:ring-red-300" : "border-[#2F6C92]/20 focus:ring-[#41B36E]"}`}
+                      className={`h-12 w-full rounded-xl border-2 bg-slate-50 px-3 text-slate-900 outline-none transition ${errors.name ? "border-red-300 focus:ring-2 focus:ring-red-200" : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20"}`}
                       placeholder="Seu nome"
                       title="Por favor, preencha seu nome completo"
                     />
@@ -285,7 +290,7 @@ export default function MetriaAuth() {
               <div className="grid gap-1.5">
                 <label
                   htmlFor="email"
-                  className="text-sm font-medium text-[#2F6C92]"
+                  className="text-sm font-semibold text-slate-700"
                 >
                   E-mail
                 </label>
@@ -296,7 +301,7 @@ export default function MetriaAuth() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className={`h-11 rounded-xl px-3 outline-none focus:ring-2 border ${errors.email ? "border-red-400 focus:ring-red-300 pr-10" : "border-[#2F6C92]/20 focus:ring-[#41B36E]"}`}
+                    className={`h-12 w-full rounded-xl border-2 bg-slate-50 px-3 text-slate-900 outline-none transition ${errors.email ? "border-red-300 focus:ring-2 focus:ring-red-200 pr-10" : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20"}`}
                     placeholder="voce@exemplo.com"
                     title="Por favor, insira um endereço de e-mail válido"
                   />
@@ -315,7 +320,7 @@ export default function MetriaAuth() {
               <div className="grid gap-1.5">
                 <label
                   htmlFor="password"
-                  className="text-sm font-medium text-[#2F6C92]"
+                  className="text-sm font-semibold text-slate-700"
                 >
                   Senha
                 </label>
@@ -326,7 +331,7 @@ export default function MetriaAuth() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className={`h-11 rounded-xl px-3 pr-12 outline-none focus:ring-2 border ${errors.password ? "border-red-400 focus:ring-red-300" : "border-[#2F6C92]/20 focus:ring-[#41B36E]"}`}
+                    className={`h-12 w-full rounded-xl border-2 bg-slate-50 px-3 pr-12 text-slate-900 outline-none transition ${errors.password ? "border-red-300 focus:ring-2 focus:ring-red-200" : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20"}`}
                     placeholder="********"
                     title="Por favor, preencha este campo"
                   />
@@ -362,7 +367,7 @@ export default function MetriaAuth() {
                 <div className="grid gap-1.5">
                   <label
                     htmlFor="confirmPassword"
-                    className="text-sm font-medium text-[#2F6C92]"
+                    className="text-sm font-semibold text-slate-700"
                   >
                     Confirmar Senha
                   </label>
@@ -373,7 +378,7 @@ export default function MetriaAuth() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      className={`h-11 rounded-xl px-3 outline-none focus:ring-2 border ${errors.confirmPassword ? "border-red-400 focus:ring-red-300 pr-20" : "border-[#2F6C92]/20 focus:ring-[#41B36E] pr-12"}`}
+                      className={`h-12 w-full rounded-xl border-2 bg-slate-50 px-3 text-slate-900 outline-none transition ${errors.confirmPassword ? "border-red-300 focus:ring-2 focus:ring-red-200 pr-20" : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20 pr-12"}`}
                       placeholder="********"
                       title="Por favor, confirme sua senha"
                     />
@@ -409,7 +414,7 @@ export default function MetriaAuth() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="mt-1 h-11 cursor-pointer rounded-xl bg-[#41B36E] text-white font-medium hover:brightness-95 transition disabled:opacity-60"
+                className={`mt-1 h-12 cursor-pointer rounded-xl font-bold transition disabled:opacity-60 ${mode === "login" ? "bg-[#1E658D] text-white hover:bg-[#175575]" : "bg-[#A3E635] text-[#373D48] hover:bg-[#97d52d]"}`}
               >
                 {isLoading ? "Processando..." : mode === "login" ? "Entrar" : "Criar conta"}
               </button>
@@ -419,7 +424,7 @@ export default function MetriaAuth() {
               <div className="mt-3 text-center">
                 <button
                   onClick={() => navigate("/forgot-password")}
-                  className="text-sm text-[#2F6C92] hover:text-[#F96B11] hover:underline font-medium transition-colors"
+                  className="text-sm text-[#1E658D] hover:underline font-semibold transition-colors"
                 >
                   Esqueci minha senha
                 </button>
@@ -453,17 +458,17 @@ export default function MetriaAuth() {
               </Tooltip>
             )}
 
-            <p className="mt-4 text-sm text-[#2F6C92]/80">
+            <p className="mt-5 text-center text-sm text-slate-500">
               {mode === "login" ? "Nao tem conta? " : "Ja possui conta? "}
               <button
                 onClick={toggleMode}
-                className="font-medium text-[#F96B11] hover:underline cursor-pointer"
+                className="font-semibold text-[#1E658D] hover:underline cursor-pointer"
               >
                 {mode === "login" ? "Cadastre-se" : "Entrar"}
               </button>
             </p>
 
-            <p className="mt-6 text-xs text-[#2F6C92]/60 leading-relaxed">
+            <p className="mt-6 text-center text-xs leading-relaxed text-slate-400">
               Ao continuar, voce concorda com nossos{" "}
               <a className="underline" href="#">
                 Termos
@@ -480,6 +485,9 @@ export default function MetriaAuth() {
           </div>
         </section>
       </div>
+
+      <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#1E658D]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-[#A3E635]/15 blur-3xl" />
 
       {/* OAuth Modal */}
       <OAuthModal 

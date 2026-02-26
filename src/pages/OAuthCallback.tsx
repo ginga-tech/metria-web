@@ -158,18 +158,18 @@ export default function OAuthCallback() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow">
+    <div className="relative min-h-screen grid place-items-center overflow-hidden bg-[#F2F5F8] p-4 sm:p-6">
+      <div className="relative z-10 w-full max-w-md rounded-[24px] border border-slate-200/80 bg-white p-6 sm:p-8 shadow-[0_20px_45px_-18px_rgba(15,23,42,0.25)] text-center">
         <div className="h-5 w-48 bg-[#F3F4F6] rounded mb-4" />
         <div className="h-24 w-full bg-[#F3F4F6] rounded" />
         {error ? (
           <div className="mt-4 text-sm text-red-600 text-center">
             <p className="font-medium">Erro na autenticação:</p>
             <p>{error}</p>
-            <p className="mt-2 text-[#2F6C92]/70">Redirecionando...</p>
+            <p className="mt-2 text-slate-500">Redirecionando...</p>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-[#2F6C92]/70 text-center">Conectando com o Google...</p>
+          <p className="mt-4 text-sm text-slate-500 text-center">Conectando com o Google...</p>
         )}
       </div>
     </div>

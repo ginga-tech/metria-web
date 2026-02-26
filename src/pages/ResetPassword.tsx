@@ -105,13 +105,13 @@ export default function ResetPassword() {
 
   if (tokenValid === null) {
     return (
-      <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-        <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8 text-center">
+      <div className="relative min-h-screen grid place-items-center overflow-hidden bg-[#F2F5F8] p-4 sm:p-6">
+        <div className="relative z-10 w-full max-w-md rounded-[28px] border border-slate-200/80 bg-white p-8 text-center shadow-[0_20px_45px_-18px_rgba(15,23,42,0.25)]">
           <div className="flex justify-center mb-6">
             <img
               src={metriaLogo}
               alt="Metria"
-              className="w-32 drop-shadow-lg"
+              className="w-24"
             />
           </div>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#41B36E] mx-auto"></div>
@@ -123,13 +123,13 @@ export default function ResetPassword() {
 
   if (tokenValid === false) {
     return (
-      <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-        <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8 text-center">
+      <div className="relative min-h-screen grid place-items-center overflow-hidden bg-[#F2F5F8] p-4 sm:p-6">
+        <div className="relative z-10 w-full max-w-md rounded-[28px] border border-slate-200/80 bg-white p-8 text-center shadow-[0_20px_45px_-18px_rgba(15,23,42,0.25)]">
           <div className="flex justify-center mb-6">
             <img
               src={metriaLogo}
               alt="Metria"
-              className="w-32 drop-shadow-lg"
+              className="w-24"
             />
           </div>
 
@@ -139,10 +139,10 @@ export default function ResetPassword() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-[#2F6C92] mb-2">
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 mb-2">
               Link InvÃ¡lido
             </h2>
-            <p className="text-[#2F6C92]/80 text-sm">
+            <p className="text-slate-500 text-sm leading-relaxed">
               Este link de recuperaÃ§Ã£o Ã© invÃ¡lido ou jÃ¡ expirou.
             </p>
           </div>
@@ -150,13 +150,13 @@ export default function ResetPassword() {
           <div className="space-y-3">
             <button
               onClick={() => navigate("/forgot-password")}
-              className="w-full h-11 rounded-xl bg-[#41B36E] text-white font-medium hover:brightness-95 transition"
+              className="w-full h-12 rounded-xl bg-[#A3E635] text-[#373D48] font-bold hover:bg-[#97d52d] transition shadow-lg shadow-[#A3E635]/25"
             >
               Solicitar Novo Link
             </button>
             <button
               onClick={() => navigate("/")}
-              className="w-full h-11 rounded-xl border border-[#2F6C92]/20 text-[#2F6C92] font-medium hover:bg-[#F3F4F6] transition"
+              className="w-full h-12 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
             >
               Voltar ao Login
             </button>
@@ -168,13 +168,13 @@ export default function ResetPassword() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-        <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8 text-center">
+      <div className="relative min-h-screen grid place-items-center overflow-hidden bg-[#F2F5F8] p-4 sm:p-6">
+        <div className="relative z-10 w-full max-w-md rounded-[28px] border border-slate-200/80 bg-white p-8 text-center shadow-[0_20px_45px_-18px_rgba(15,23,42,0.25)]">
           <div className="flex justify-center mb-6">
             <img
               src={metriaLogo}
               alt="Metria"
-              className="w-32 drop-shadow-lg"
+              className="w-24"
             />
           </div>
 
@@ -184,17 +184,17 @@ export default function ResetPassword() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-[#2F6C92] mb-2">
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 mb-2">
               Senha Redefinida!
             </h2>
-            <p className="text-[#2F6C92]/80 text-sm">
+            <p className="text-slate-500 text-sm leading-relaxed">
               Sua senha foi alterada com sucesso. Agora vocÃª pode fazer login com sua nova senha.
             </p>
           </div>
 
           <button
             onClick={() => navigate("/")}
-            className="w-full h-11 rounded-xl bg-[#41B36E] text-white font-medium hover:brightness-95 transition"
+            className="w-full h-12 rounded-xl bg-[#A3E635] text-[#373D48] font-bold hover:bg-[#97d52d] transition shadow-lg shadow-[#A3E635]/25"
           >
             Fazer Login
           </button>
@@ -204,21 +204,21 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-[#F3F4F6] p-4">
-      <div className="w-full max-w-md rounded-2xl shadow-xl bg-white p-8">
+    <div className="relative min-h-screen grid place-items-center overflow-hidden bg-[#F2F5F8] p-4 sm:p-6">
+      <div className="relative z-10 w-full max-w-md rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_20px_45px_-18px_rgba(15,23,42,0.25)]">
         <div className="flex justify-center mb-6">
           <img
             src={metriaLogo}
             alt="Metria"
-            className="w-32 drop-shadow-lg"
+            className="w-24"
           />
         </div>
 
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-semibold text-[#2F6C92] mb-2">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">
             Nova Senha
           </h2>
-          <p className="text-[#2F6C92]/80 text-sm">
+          <p className="text-slate-500 text-sm leading-relaxed">
             Digite sua nova senha abaixo
           </p>
         </div>
@@ -227,7 +227,7 @@ export default function ResetPassword() {
           <div className="grid gap-1.5">
             <label
               htmlFor="password"
-              className="text-sm font-medium text-[#2F6C92]"
+              className="text-sm font-semibold text-slate-700"
             >
               Nova Senha
             </label>
@@ -238,10 +238,10 @@ export default function ResetPassword() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className={`w-full h-11 rounded-xl px-3 outline-none focus:ring-2 border ${
+                className={`w-full h-12 rounded-xl border-2 bg-slate-50 px-3 outline-none transition ${
                   errors.password 
-                    ? "border-red-400 focus:ring-red-300 pr-20" 
-                    : "border-[#2F6C92]/20 focus:ring-[#41B36E] pr-12"
+                    ? "border-red-300 focus:ring-2 focus:ring-red-200 pr-20" 
+                    : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20 pr-12"
                 }`}
                 placeholder="********"
                 title="A senha deve ter pelo menos 6 caracteres"
@@ -279,7 +279,7 @@ export default function ResetPassword() {
           <div className="grid gap-1.5">
             <label
               htmlFor="confirmPassword"
-              className="text-sm font-medium text-[#2F6C92]"
+              className="text-sm font-semibold text-slate-700"
             >
               Confirmar Nova Senha
             </label>
@@ -290,10 +290,10 @@ export default function ResetPassword() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className={`w-full h-11 rounded-xl px-3 outline-none focus:ring-2 border ${
+                className={`w-full h-12 rounded-xl border-2 bg-slate-50 px-3 outline-none transition ${
                   errors.confirmPassword 
-                    ? "border-red-400 focus:ring-red-300 pr-20" 
-                    : "border-[#2F6C92]/20 focus:ring-[#41B36E] pr-12"
+                    ? "border-red-300 focus:ring-2 focus:ring-red-200 pr-20" 
+                    : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20 pr-12"
                 }`}
                 placeholder="********"
                 title="Confirme sua nova senha"
@@ -331,7 +331,7 @@ export default function ResetPassword() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full h-11 rounded-xl bg-[#41B36E] text-white font-medium hover:brightness-95 transition disabled:opacity-60"
+            className="w-full h-12 rounded-xl bg-[#A3E635] text-[#373D48] font-bold hover:bg-[#97d52d] transition disabled:opacity-60 shadow-lg shadow-[#A3E635]/25"
           >
             {isLoading ? "Redefinindo..." : "Redefinir Senha"}
           </button>
@@ -357,7 +357,7 @@ export default function ResetPassword() {
         <div className="mt-6 text-center">
           <button
             onClick={() => navigate("/")}
-            className="text-sm text-[#F96B11] hover:underline font-medium"
+            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-[#1E658D] hover:underline font-semibold"
           >
             â† Voltar ao Login
           </button>
