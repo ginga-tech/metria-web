@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
+import { getPreferredFirstName } from "../utils/userDisplay";
 import { useMemo } from "react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale";
@@ -184,7 +185,7 @@ export default function Preferences() {
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Perfil e Preferências</h1>
                 <p className="text-[#2F6C92]/70 text-sm">
-                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>! 
+                  Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>! 
                   Ajuste seu perfil, idioma e notificações.
                 </p>
               </div>

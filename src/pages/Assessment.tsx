@@ -4,6 +4,7 @@ import metriaLogo from "../assets/metria-logo.svg";
 import "../styles/slider.css";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
+import { getPreferredFirstName } from "../utils/userDisplay";
 import { DIMENSIONS, type DimensionKey } from "../constants/assessment";
 
 /**
@@ -171,7 +172,7 @@ export default function Assessment() {
                 {isEditing ? "Editar Avaliação" : "Nova Avaliação"}
               </h1>
               <p className="text-sm text-[#2F6C92]/70">
-                Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>!
+                Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>!
               </p>
             </div>
           </div>

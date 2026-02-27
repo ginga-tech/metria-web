@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
+import { getPreferredFirstName } from "../utils/userDisplay";
 import { createGoal, updateGoal, deleteGoal, getGoals } from "../services/goalsService";
 import UpgradeModal from "../components/UpgradeModal";
 import { 
@@ -568,7 +569,7 @@ export default function Goals() {
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Minhas Metas</h1>
                 <p className="text-[#2F6C92]/70 text-sm">
-                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>! 
+                  Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>! 
                   Defina e acompanhe suas metas de vida.
                 </p>
               </div>

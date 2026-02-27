@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "../components/UserMenu";
+import PageLoader from "../components/PageLoader";
 import { useUser } from "../hooks/useUser";
+import { getPreferredFirstName } from "../utils/userDisplay";
 import { getSubscriptions, type SubscriptionRecord } from "../services/billingService";
 
 export default function Subscriptions() {
@@ -46,6 +48,8 @@ export default function Subscriptions() {
     return active ? [active, ...others] : others;
   }, [items]);
 
+  if (loading) return <PageLoader message="Carregando assinaturas..." />;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F3F4F6] to-[#E5E7EB] p-4">
       <div className="mx-auto max-w-4xl">
@@ -59,7 +63,7 @@ export default function Subscriptions() {
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Assinaturas</h1>
                 <p className="text-[#2F6C92]/70 text-sm">
-                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>
+                  Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>
                 </p>
               </div>
             </div>
@@ -75,14 +79,11 @@ export default function Subscriptions() {
             </button>
           </div>
 
-          {loading && (
-            <div className="py-10 text-center text-[#2F6C92]">Carregando assinaturas...</div>
-          )}
           {error && (
             <div className="py-3 mb-4 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700">{error}</div>
           )}
 
-          {!loading && sorted.length === 0 && !error && (
+          {sorted.length === 0 && !error && (
             <div className="py-10 text-center text-gray-500">Nenhuma assinatura encontrada.</div>
           )}
 

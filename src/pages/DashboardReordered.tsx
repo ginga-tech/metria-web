@@ -11,8 +11,10 @@ import {
 } from "recharts";
 import UserMenu from "../components/UserMenu";
 import TipsModal from "../components/TipsModal";
+import PageLoader from "../components/PageLoader";
 import { useUser } from "../hooks/useUser";
 import { getSubscriptionStatus } from "../services/billingService";
+import { getPreferredFirstName } from "../utils/userDisplay";
 
 type Scores = Record<string, number>;
 
@@ -222,7 +224,7 @@ export default function DashboardReordered() {
     }
   }, [data]);
 
-  if (loading) return <Loading />;
+  if (loading) return <PageLoader message="Carregando seu dashboard..." />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F3F4F6] to-[#E5E7EB] p-4">
@@ -237,7 +239,7 @@ export default function DashboardReordered() {
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Dashboard</h1>
                 <p className="text-[#2F6C92]/70 text-sm">
-                  Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>! Última avaliação em <span className="font-medium text-[#2F6C92]">{when}</span>
+                  Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>! Última avaliação em <span className="font-medium text-[#2F6C92]">{when}</span>
                 </p>
               </div>
             </div>
@@ -492,21 +494,6 @@ export default function DashboardReordered() {
           tips={selectedTips}
           onGoToGoals={() => { setTipsOpen(false); navigate('/goals'); }}
         />
-      </div>
-    </div>
-  );
-}
-
-function Loading() {
-  return (
-    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-[#F3F4F6] to-[#E5E7EB] p-4">
-      <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow-sm border border-gray-100">
-        <div className="animate-pulse">
-          <div className="h-6 w-48 bg-[#F3F4F6] rounded mb-4" />
-          <div className="h-72 w-full bg-[#F3F4F6] rounded mb-4" />
-          <div className="h-4 w-1/2 bg-[#F3F4F6] rounded" />
-        </div>
-        <p className="mt-4 text-sm text-[#2F6C92]/70 text-center">Carregando seu dashboard...</p>
       </div>
     </div>
   );

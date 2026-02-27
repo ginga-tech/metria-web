@@ -1,5 +1,6 @@
 ﻿import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getPreferredFirstName } from "../utils/userDisplay";
 
 
 interface UserMenuProps {
@@ -77,18 +78,14 @@ export default function UserMenu({ userEmail, userName }: UserMenuProps) {
     setIsOpen(false);
   };
 
-  // Pega as iniciais do nome (preferencial) ou e-mail
-  const getInitials = (name?: string, email?: string) => {
+  const displayName = getPreferredFirstName(userName, userEmail);
+
+  // Pega as iniciais do nome exibido.
+  const getInitials = (name: string) => {
     if (name && name.trim()) {
       const parts = name.trim().split(/\s+/);
       if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
       return parts[0][0].toUpperCase();
-    }
-    if (email) {
-      const local = email.split('@')[0];
-      const parts = local.split('.');
-      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-      return local[0]?.toUpperCase() || 'U';
     }
     return 'U';
   };
@@ -101,7 +98,7 @@ export default function UserMenu({ userEmail, userName }: UserMenuProps) {
         className="flex items-center justify-center w-10 h-10 rounded-full bg-[#2F6C92] text-white font-medium hover:bg-[#2F6C92]/90 transition-colors"
         aria-label="Menu do usuário"
       >
-        {getInitials(userName, userEmail)}
+        {getInitials(displayName)}
       </button>
 
       {/* Dropdown Menu */}
@@ -110,7 +107,7 @@ export default function UserMenu({ userEmail, userName }: UserMenuProps) {
           {/* User Info */}
           <div className="px-4 py-3 border-b border-[#2F6C92]/10">
             <p className="text-sm font-medium text-[#2F6C92]">Conectado como:</p>
-            <p className="text-sm text-[#2F6C92]/80 truncate">{userName || userEmail || 'Usuário'}</p>
+            <p className="text-sm text-[#2F6C92]/80 truncate">{displayName}</p>
           </div>
 
           {/* Menu Items */}
