@@ -271,6 +271,9 @@ export default function Goals() {
   }, [state]);
 
   const currentPeriodInfo = GOAL_PERIODS[state.currentPeriod];
+  const currentPeriodPluralLabel = currentPeriodInfo.label.endsWith('al')
+    ? `${currentPeriodInfo.label.slice(0, -2)}ais`
+    : `${currentPeriodInfo.label}s`;
   const periodDates = getPeriodDates(state.currentPeriod, state.customStartDate, state.customEndDate, state.periodOffset ?? 0);
   
   // Carrega todas as metas do backend ao entrar na tela
@@ -778,7 +781,7 @@ export default function Goals() {
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-bold text-[#2F6C92] mb-4 flex items-center gap-2">
                 <span style={{ color: currentPeriodInfo.color }}>{currentPeriodInfo.icon}</span>
-                Metas {currentPeriodInfo.label}s
+                Metas {currentPeriodPluralLabel}
               </h3>
               <div className="mb-4 flex items-center gap-3">
                 <label className="text-sm text-gray-600">Filtrar por categoria:</label>
