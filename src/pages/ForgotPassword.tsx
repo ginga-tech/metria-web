@@ -172,7 +172,7 @@ export default function ForgotPassword() {
             disabled={isLoading}
             className="w-full h-12 rounded-xl bg-[#A3E635] text-[#373D48] font-bold hover:bg-[#97d52d] transition disabled:opacity-60 shadow-lg shadow-[#A3E635]/25"
           >
-            {isLoading ? "Enviando..." : "Enviar Link de RecuperaÃ§Ã£o"}
+            {isLoading ? "Enviando..." : "Enviar Link de Recuperação de Senha"}
           </button>
         </form>
 
@@ -198,7 +198,7 @@ export default function ForgotPassword() {
             onClick={() => navigate("/")}
             className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-[#1E658D] hover:underline font-semibold"
           >
-            â† Voltar ao Login
+            Voltar ao Login
           </button>
         </div>
       </div>

@@ -71,7 +71,7 @@ export function useSmartRedirect() {
           
           // Se está tentando acessar assessment mas já tem um, redireciona para dashboard
           if (currentPath === '/assessment' && status.hasAssessment) {
-            // Permite editar assessment se vier do menu do usuário
+            // Permite editar avaliação se vier do menu do usuário
             const fromUserMenu = sessionStorage.getItem('editAssessment');
             if (!fromUserMenu) {
               navigate('/dashboard', { replace: true });

@@ -3,7 +3,6 @@ import { login, signup } from "../services/authService";
 import { useNavigate } from "react-router-dom";
 import metriaLogo from "../assets/metria-logo.svg";
 import Tooltip from "../components/Tooltip";
-import OAuthModal from "../components/OAuthModal";
 import { useGoogleOAuth } from "../hooks/useGoogleOAuth";
 import { getApiBaseUrl } from "../lib/api";
 
@@ -59,13 +58,13 @@ export default function MetriaAuth() {
   
   if (mode === "signup" && name.trim().length < 2) next.name = "O nome deve ter pelo menos 2 caracteres";
 
-  if (!emailRegex.test(eTrim)) next.email = "Por favor, insira um e-mail válido";
+  if (!emailRegex.test(eTrim)) next.email = "Por favor, insira um e-mail vÃ¡lido";
   
   if (mode === "signup") {
     if (!p || p.length < 6) next.password = "A senha deve ter pelo menos 6 caracteres";
-    if (p !== confirmPassword) next.confirmPassword = "As senhas não coincidem";
+    if (p !== confirmPassword) next.confirmPassword = "As senhas nÃ£o coincidem";
   } else {
-    if (!p) next.password = "A senha é obrigatória";
+    if (!p) next.password = "A senha Ã© obrigatÃ³ria";
   }
   
   setErrors(next);
@@ -83,9 +82,9 @@ export default function MetriaAuth() {
       token = (res.token || '').replace(/^Bearer\s+/i, '');
       localStorage.setItem("lb_token", token);
     }
-    setMessage("Autenticação realizada com sucesso!");
+    setMessage("AutenticaÃ§Ã£o realizada com sucesso!");
     
-    // Verificar status do usuário antes de redirecionar
+    // Verificar status do usuÃ¡rio antes de redirecionar
     try {
       const API = getApiBaseUrl();
       const statusResponse = await fetch(`${API}/api/user/status`, {
@@ -96,10 +95,10 @@ export default function MetriaAuth() {
       
       if (statusResponse.ok) {
         const status = await statusResponse.json();
-        // Se já tem assessment, vai para dashboard. Caso contrário, vai para assessment
+        // Se jÃ¡ tem assessment, vai para dashboard. Caso contrÃ¡rio, vai para assessment
         navigate(status.hasAssessment ? "/dashboard" : "/assessment");
       } else {
-        // Se falhar ao verificar status, redireciona para assessment por segurança
+        // Se falhar ao verificar status, redireciona para assessment por seguranÃ§a
         navigate("/assessment");
       }
     } catch {
@@ -107,15 +106,15 @@ export default function MetriaAuth() {
       navigate("/assessment");
     }
   } catch (err: any) {
-    const errorMessage = err?.message ?? "Erro ao realizar autenticação";
+    const errorMessage = err?.message ?? "Erro ao realizar autenticaÃ§Ã£o";
     // Traduzir mensagens de erro comuns da API
     let translatedMessage = errorMessage;
     if (errorMessage.includes("Email ja cadastrado")) {
-      translatedMessage = "Este e-mail já está cadastrado. Tente fazer login.";
+      translatedMessage = "Este e-mail jÃ¡ estÃ¡ cadastrado. Tente fazer login.";
     } else if (errorMessage.includes("Unauthorized")) {
       translatedMessage = "E-mail ou senha incorretos. Verifique suas credenciais.";
     } else if (errorMessage.includes("Invalid email")) {
-      translatedMessage = "E-mail inválido. Verifique o formato do e-mail.";
+      translatedMessage = "E-mail invÃ¡lido. Verifique o formato do e-mail.";
     } else if (errorMessage.includes("Password")) {
       translatedMessage = "Erro na senha. Verifique se atende aos requisitos.";
     }
@@ -134,7 +133,7 @@ export default function MetriaAuth() {
         localStorage.setItem("lb_token", cleanToken);
         setMessage("Login com Google realizado com sucesso!");
         
-        // Verificar status do usuário antes de redirecionar
+        // Verificar status do usuÃ¡rio antes de redirecionar
         try {
           const API = getApiBaseUrl();
           const statusResponse = await fetch(`${API}/api/user/status`, {
@@ -145,10 +144,10 @@ export default function MetriaAuth() {
           
           if (statusResponse.ok) {
             const status = await statusResponse.json();
-            // Se já tem assessment, vai para dashboard. Caso contrário, vai para assessment
+            // Se jÃ¡ tem assessment, vai para dashboard. Caso contrÃ¡rio, vai para assessment
             navigate(status.hasAssessment ? "/dashboard" : "/assessment");
           } else {
-            // Se falhar ao verificar status, redireciona para assessment por segurança
+            // Se falhar ao verificar status, redireciona para assessment por seguranÃ§a
             navigate("/assessment");
           }
         } catch {
@@ -304,7 +303,7 @@ export default function MetriaAuth() {
                     required
                     className={`h-12 w-full rounded-xl border-2 bg-slate-50 px-3 text-slate-900 outline-none transition ${errors.email ? "border-red-300 focus:ring-2 focus:ring-red-200 pr-10" : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20"}`}
                     placeholder="voce@exemplo.com"
-                    title="Por favor, insira um endereço de e-mail válido"
+                    title="Por favor, insira um endereÃ§o de e-mail vÃ¡lido"
                   />
                   {errors.email && (
                     <Tooltip content={errors.email} type="error" position="bottom">
@@ -489,15 +488,6 @@ export default function MetriaAuth() {
 
       <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#1E658D]/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-[#A3E635]/15 blur-3xl" />
-
-      {/* OAuth Modal */}
-      <OAuthModal 
-        isOpen={isGoogleLoading} 
-        onClose={() => {
-          // O modal será fechado automaticamente quando o hook terminar
-          // Mas permitimos que o usuário cancele manualmente
-        }} 
-      />
     </div>
   );
 }

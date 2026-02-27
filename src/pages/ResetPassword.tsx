@@ -359,7 +359,7 @@ export default function ResetPassword() {
             onClick={() => navigate("/")}
             className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-[#1E658D] hover:underline font-semibold"
           >
-            â† Voltar ao Login
+            Voltar ao Login
           </button>
         </div>
       </div>
