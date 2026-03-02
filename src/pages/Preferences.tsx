@@ -1,22 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DatePicker, { registerLocale } from "react-datepicker";
+import { ptBR } from "date-fns/locale";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
 import { getPreferredFirstName } from "../utils/userDisplay";
-import DatePicker, { registerLocale } from "react-datepicker";
-import { ptBR } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
 
 registerLocale("pt-BR", ptBR);
-
-/**
- * Perfil/Preferências – Atualizado
- * - Nome do usuário (salvo no banco)
- * - Data de nascimento (salvo no banco)
- * - Idioma (pt/en) - localStorage
- * - Notificação semanal (toggle) - localStorage
- * - Redefinir avaliação (limpa localStorage lb_assessment)
- */
 
 type Lang = "pt" | "en";
 
@@ -36,22 +27,32 @@ function toIsoDate(date: Date): string {
 function parseIsoDate(value: string): Date | null {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return null;
+
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
   const date = new Date(year, month - 1, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null;
+  }
+
   return date;
 }
 
 function parseDisplayDate(value: string): Date | null {
   const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (!match) return null;
+
   const day = Number(match[1]);
   const month = Number(match[2]);
   const year = Number(match[3]);
   const date = new Date(year, month - 1, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null;
+  }
+
   return date;
 }
 
@@ -63,9 +64,11 @@ function getAge(date: Date): number {
   const today = new Date();
   let age = today.getFullYear() - date.getFullYear();
   const monthDiff = today.getMonth() - date.getMonth();
+
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
     age -= 1;
   }
+
   return age;
 }
 
@@ -77,11 +80,11 @@ export default function Preferences() {
   const [birthDate, setBirthDate] = useState("");
   const [birthDateObj, setBirthDateObj] = useState<Date | null>(null);
   const [lang, setLang] = useState<Lang>("pt");
-  const [notifyWeekly, setNotifyWeekly] = useState<boolean>(false);
+  const [notifyWeekly, setNotifyWeekly] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const maxBirthDate = useMemo(() => {
     const date = new Date();
@@ -118,7 +121,7 @@ export default function Preferences() {
   }
 
   function validateFields(): { valid: boolean; normalizedBirthDate?: string } {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     const birthDateValidation = validateBirthDate(birthDate);
     if (!birthDateValidation.valid) {
@@ -143,7 +146,6 @@ export default function Preferences() {
   async function loadPreferences() {
     setLoading(true);
     try {
-      // Carrega preferências do servidor
       const API = import.meta.env.VITE_API_BASE_URL as string | undefined;
       const token = localStorage.getItem("lb_token") ?? "";
 
@@ -154,16 +156,15 @@ export default function Preferences() {
 
         if (response.ok) {
           const data: UserPreferences = await response.json();
+          const currentBirthDate = data.birthDate || "";
           setName(data.name || "");
-          const bd = data.birthDate || "";
-          setBirthDate(bd);
-          setBirthDateObj(bd ? parseBirthDate(bd) : null);
+          setBirthDate(currentBirthDate);
+          setBirthDateObj(currentBirthDate ? parseBirthDate(currentBirthDate) : null);
         }
       }
 
-      // Carrega preferências locais
-      const l = (localStorage.getItem("lb_lang") as Lang | null) || "pt";
-      setLang(l === "en" ? "en" : "pt");
+      const currentLang = (localStorage.getItem("lb_lang") as Lang | null) || "pt";
+      setLang(currentLang === "en" ? "en" : "pt");
       setNotifyWeekly(localStorage.getItem("lb_notify_weekly") === "true");
     } catch (error) {
       console.error("Erro ao carregar preferências:", error);
@@ -187,7 +188,6 @@ export default function Preferences() {
     setBirthDate(normalizedBirthDate);
 
     try {
-      // Salva preferências no servidor
       const API = import.meta.env.VITE_API_BASE_URL as string | undefined;
       const token = localStorage.getItem("lb_token") ?? "";
 
@@ -205,14 +205,12 @@ export default function Preferences() {
         });
 
         if (!response.ok) {
-          throw new Error("Erro ao salvar no servidor");
+          throw new Error("Erro ao salvar no servidor.");
         }
       }
 
-      // Salva preferências locais
       localStorage.setItem("lb_lang", lang);
       localStorage.setItem("lb_notify_weekly", String(notifyWeekly));
-
       setMessage("Preferências salvas com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar preferências:", error);
@@ -225,6 +223,7 @@ export default function Preferences() {
   function resetAssessment() {
     const ok = window.confirm("Tem certeza que deseja redefinir sua autoavaliação?");
     if (!ok) return;
+
     try {
       localStorage.removeItem("lb_assessment");
       setMessage("Autoavaliação redefinida.");
@@ -234,20 +233,21 @@ export default function Preferences() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F3F4F6] via-[#EEF3F7] to-[#E5E7EB] p-4">
-      <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <header className="mb-7">
+    <div className="min-h-screen bg-gradient-to-br from-[#F3F4F6] to-[#E5E7EB] p-4">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center shadow-lg shadow-[#2F6C92]/20">
-                <span className="text-white text-2xl">⚙️</span>
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317a1 1 0 011.35-.936l.756.327a1 1 0 001.138-.245l.53-.61a1 1 0 011.536 0l.53.61a1 1 0 001.138.245l.756-.327a1 1 0 011.35.936l.1.861a1 1 0 00.712.861l.83.27a1 1 0 01.621 1.28l-.3.824a1 1 0 00.21 1.047l.58.631a1 1 0 010 1.355l-.58.632a1 1 0 00-.21 1.047l.3.824a1 1 0 01-.621 1.28l-.83.27a1 1 0 00-.712.861l-.1.861a1 1 0 01-1.35.936l-.756-.327a1 1 0 00-1.138.245l-.53.61a1 1 0 01-1.536 0l-.53-.61a1 1 0 00-1.138-.245l-.756.327a1 1 0 01-1.35-.936l-.1-.861a1 1 0 00-.712-.861l-.83-.27a1 1 0 01-.621-1.28l.3-.824a1 1 0 00-.21-1.047l-.58-.632a1 1 0 010-1.355l.58-.631a1 1 0 00.21-1.047l-.3-.824a1 1 0 01.621-1.28l.83-.27a1 1 0 00.712-.861l.1-.861z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
               </div>
               <div>
-                <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#2F6C92]">Perfil e Preferências</h1>
-                <p className="text-[#2F6C92]/80 text-lg">
-                  Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>! 
-                  Ajuste seu perfil, idioma e notificações.
+                <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Perfil e Preferências</h1>
+                <p className="text-[#2F6C92]/70 text-sm sm:text-base">
+                  Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>! Ajuste seu perfil, idioma e notificações.
                 </p>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function Preferences() {
           </div>
         </header>
 
-        <section className="bg-white rounded-[26px] p-6 sm:p-8 shadow-[0_24px_45px_-20px_rgba(15,23,42,0.28)] border border-slate-200/90">
+        <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           {loading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2F6C92]"></div>
@@ -263,15 +263,18 @@ export default function Preferences() {
             </div>
           )}
 
-          <div className={loading ? 'opacity-50 pointer-events-none' : ''}>
-            {/* Informações Pessoais */}
-            <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+          <div className={`space-y-6 ${loading ? "opacity-50 pointer-events-none" : ""}`}>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-5">
               <h2 className="text-xl font-bold text-[#2F6C92] mb-6 flex items-center gap-2">
-                <span>👤</span> Informações Pessoais
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#2F6C92]/10 text-[#2F6C92]">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A9 9 0 1118.879 17.8M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </span>
+                Informações Pessoais
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Nome */}
                 <div className="space-y-2">
                   <label htmlFor="name" className="text-sm font-semibold text-[#2F6C92]">Nome Completo</label>
                   <input
@@ -279,16 +282,15 @@ export default function Preferences() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full h-12 rounded-xl border border-gray-200 px-4 outline-none focus:ring-2 focus:ring-[#41B36E] focus:border-transparent transition-all"
+                    className="w-full h-12 rounded-xl border border-slate-300 bg-white px-4 text-slate-900 outline-none focus:ring-2 focus:ring-[#41B36E]/30 focus:border-[#41B36E] transition-all"
                     placeholder="Digite seu nome completo"
                     disabled={loading}
                   />
                 </div>
 
-                {/* Data de Nascimento */}
                 <div className="space-y-2">
                   <label htmlFor="birthDate" className="text-sm font-semibold text-[#2F6C92] flex items-center gap-1">
-                    Data de Nascimento 
+                    Data de Nascimento
                     <span className="text-red-500 text-xs">*obrigatório</span>
                   </label>
                   <DatePicker
@@ -298,8 +300,8 @@ export default function Preferences() {
                     dateFormat="dd/MM/yyyy"
                     placeholderText="dd/mm/aaaa"
                     locale="pt-BR"
-                    className={`w-full h-12 rounded-xl border px-4 outline-none focus:ring-2 transition-all ${
-                      errors.birthDate ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-[#41B36E] focus:border-transparent'
+                    className={`w-full h-12 rounded-xl border bg-white px-4 outline-none focus:ring-2 transition-all ${
+                      errors.birthDate ? "border-red-500 focus:ring-red-500/25" : "border-slate-300 focus:ring-[#41B36E]/30 focus:border-[#41B36E]"
                     }`}
                     showMonthDropdown
                     showYearDropdown
@@ -309,8 +311,11 @@ export default function Preferences() {
                     disabled={loading}
                   />
                   {errors.birthDate && (
-                    <p className="text-sm text-red-500 flex items-center gap-1">
-                      <span>⚠️</span> {errors.birthDate}
+                    <p className="text-sm text-red-600 flex items-center gap-2">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M10.29 3.86l-7.4 12.82A1 1 0 003.75 18h16.5a1 1 0 00.86-1.5l-7.4-12.82a1 1 0 00-1.72 0z" />
+                      </svg>
+                      {errors.birthDate}
                     </p>
                   )}
                   <p className="text-xs text-gray-500">Idade permitida: {MIN_AGE} a {MAX_AGE} anos</p>
@@ -318,44 +323,46 @@ export default function Preferences() {
               </div>
             </div>
 
-            {/* Preferências do Sistema */}
-            <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-5">
               <h2 className="text-xl font-bold text-[#2F6C92] mb-6 flex items-center gap-2">
-                <span>🔧</span> Preferências do Sistema
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#41B36E]/10 text-[#41B36E]">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317a1 1 0 011.35-.936l.756.327a1 1 0 001.138-.245l.53-.61a1 1 0 011.536 0l.53.61a1 1 0 001.138.245l.756-.327a1 1 0 011.35.936l.1.861a1 1 0 00.712.861l.83.27a1 1 0 01.621 1.28l-.3.824a1 1 0 00.21 1.047l.58.631a1 1 0 010 1.355l-.58.632a1 1 0 00-.21 1.047l.3.824a1 1 0 01-.621 1.28l-.83.27a1 1 0 00-.712.861l-.1.861a1 1 0 01-1.35.936l-.756-.327a1 1 0 00-1.138.245l-.53.61a1 1 0 01-1.536 0l-.53-.61a1 1 0 00-1.138-.245l-.756.327a1 1 0 01-1.35-.936l-.1-.861a1 1 0 00-.712-.861l-.83-.27a1 1 0 01-.621-1.28l.3-.824a1 1 0 00-.21-1.047l-.58-.632a1 1 0 010-1.355l.58-.631a1 1 0 00.21-1.047l-.3-.824a1 1 0 01.621-1.28l.83-.27a1 1 0 00.712-.861l.1-.861z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </span>
+                Preferências do Sistema
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Idioma */}
                 <div className="space-y-2">
                   <label htmlFor="lang" className="text-sm font-semibold text-[#2F6C92]">Idioma da Interface</label>
                   <select
                     id="lang"
                     value={lang}
                     onChange={(e) => setLang((e.target.value as Lang) || "pt")}
-                    className="w-full h-12 rounded-xl border border-gray-200 px-4 outline-none focus:ring-2 focus:ring-[#41B36E] focus:border-transparent bg-white transition-all"
+                    className="w-full h-12 rounded-xl border border-slate-300 px-4 bg-white text-slate-900 outline-none focus:ring-2 focus:ring-[#41B36E]/30 focus:border-[#41B36E] transition-all"
                     disabled={loading}
                   >
-                    <option value="pt">🇧🇷 Português (Brasil)</option>
-                    <option value="en">🇺🇸 English (US)</option>
+                    <option value="pt">Português (Brasil)</option>
+                    <option value="en">English (US)</option>
                   </select>
                 </div>
 
-                {/* Notificação semanal */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-[#2F6C92]">Notificações</label>
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-[#F3F4F6] to-[#E5E7EB] border border-gray-100">
-                    <input
-                      type="checkbox"
-                      checked={notifyWeekly}
-                      onChange={(e) => setNotifyWeekly(e.target.checked)}
-                      className="peer sr-only"
-                      id="notifyWeekly"
-                    />
-                    <label htmlFor="notifyWeekly" className="cursor-pointer">
-                      <span className="h-6 w-11 rounded-full bg-gray-300 relative transition peer-checked:bg-[#41B36E] flex">
-                        <span className={`absolute left-0 top-0 h-6 w-6 rounded-full bg-white border border-gray-300 transition-transform ${notifyWeekly ? 'translate-x-5' : 'translate-x-0'}`} />
-                      </span>
-                    </label>
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-200">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={notifyWeekly}
+                      onClick={() => setNotifyWeekly((current) => !current)}
+                      className={`relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#41B36E]/30 ${notifyWeekly ? "bg-[#41B36E]" : "bg-slate-300"}`}
+                    >
+                      <span
+                        className={`absolute top-0 h-6 w-6 rounded-full bg-white border border-slate-300 transition-transform ${notifyWeekly ? "translate-x-5" : "translate-x-0"}`}
+                      />
+                    </button>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-[#2F6C92]">Lembrete Semanal</p>
                       <p className="text-xs text-gray-600">Receber notificação para revisar seu equilíbrio</p>
@@ -365,13 +372,12 @@ export default function Preferences() {
               </div>
             </div>
 
-            {/* Ações */}
             <div className="border-t border-slate-200 pt-6">
-              <div className="flex flex-col lg:flex-row gap-3">
-                <button 
-                  onClick={save} 
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                <button
+                  onClick={save}
                   disabled={saving || loading}
-                  className="h-14 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white font-semibold px-8 hover:from-[#10B981] hover:to-[#41B36E] hover:brightness-110 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2 cursor-pointer min-w-[220px]"
+                  className="h-12 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white font-semibold px-5 hover:from-[#10B981] hover:to-[#41B36E] transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {saving ? (
                     <>
@@ -380,43 +386,58 @@ export default function Preferences() {
                     </>
                   ) : (
                     <>
-                      <span>💾</span>
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 4h12l2 2v14H5V4zm3 0v5h8V4M9 14h6" />
+                      </svg>
                       Salvar Alterações
                     </>
                   )}
                 </button>
-                
-                <button 
-                  onClick={resetAssessment} 
+
+                <button
+                  onClick={resetAssessment}
                   disabled={loading}
-                  className="h-14 rounded-xl border-2 border-[#F96B11] text-[#F96B11] font-semibold px-6 hover:bg-[#F96B11] hover:text-white hover:brightness-110 transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer min-w-[220px]"
+                  className="h-12 rounded-xl border border-[#F96B11] text-[#F96B11] font-semibold px-5 hover:bg-[#F96B11] hover:text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>🔄</span>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20v-6h-6M5.64 18.36A9 9 0 1020 12" />
+                  </svg>
                   Redefinir Avaliação
                 </button>
-                
-                <button 
-                  onClick={() => navigate(-1)} 
-                  className="h-14 rounded-xl border-2 border-gray-300 text-gray-600 font-medium px-6 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer min-w-[150px]"
+
+                <button
+                  onClick={() => navigate(-1)}
+                  className="h-12 rounded-xl border border-slate-300 text-slate-600 font-medium px-5 hover:bg-slate-100 hover:border-slate-400 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>←</span>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
                   Voltar
                 </button>
+
                 <button
-                  onClick={() => navigate('/subscriptions')}
-                  className="h-14 rounded-xl border-2 border-[#2F6C92] text-[#2F6C92] font-semibold px-6 hover:bg-[#F3F4F6] hover:border-[#2F6C92] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer min-w-[240px]"
+                  onClick={() => navigate("/subscriptions")}
+                  className="h-12 rounded-xl border border-[#2F6C92] text-[#2F6C92] font-semibold px-5 hover:bg-[#F3F4F6] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-2.21 0-4 1.79-4 4m8 0a4 4 0 01-4 4m0-8a8 8 0 100 16 8 8 0 000-16z" />
                   </svg>
                   Gerenciar Assinatura
                 </button>
+              </div>
             </div>
-          </div>
           </div>
 
           {message && (
-            <div className="mt-3 text-sm text-[#2F6C92] bg-[#F3F4F6] rounded-xl p-3">{message}</div>
+            <div
+              className={`mt-4 text-sm rounded-xl p-3 border ${
+                message.includes("sucesso")
+                  ? "text-green-700 bg-green-50 border-green-200"
+                  : "text-[#2F6C92] bg-[#F3F4F6] border-[#D5DEE6]"
+              }`}
+            >
+              {message}
+            </div>
           )}
         </section>
       </div>
