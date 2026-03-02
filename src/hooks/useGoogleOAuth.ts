@@ -44,7 +44,7 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
             clearInterval(checkClosed);
             window.removeEventListener('message', messageHandler);
             setIsLoading(false);
-            reject(new Error('Login cancelado pelo usuÃ¡rio'));
+            reject(new Error('Login cancelado pelo usuário'));
           }
         }, 1000);
 

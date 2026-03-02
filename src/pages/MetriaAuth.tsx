@@ -84,7 +84,7 @@ export default function MetriaAuth() {
     }
     setMessage("AutenticaÃ§Ã£o realizada com sucesso!");
     
-    // Verificar status do usuÃ¡rio antes de redirecionar
+    // Verificar status do usuário antes de redirecionar
     try {
       const API = getApiBaseUrl();
       const statusResponse = await fetch(`${API}/api/user/status`, {
@@ -133,7 +133,7 @@ export default function MetriaAuth() {
         localStorage.setItem("lb_token", cleanToken);
         setMessage("Login com Google realizado com sucesso!");
         
-        // Verificar status do usuÃ¡rio antes de redirecionar
+        // Verificar status do usuário antes de redirecionar
         try {
           const API = getApiBaseUrl();
           const statusResponse = await fetch(`${API}/api/user/status`, {
