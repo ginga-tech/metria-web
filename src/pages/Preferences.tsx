@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
 import { getPreferredFirstName } from "../utils/userDisplay";
-import { useMemo } from "react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { ptBR } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
@@ -27,6 +26,49 @@ interface UserPreferences {
   birthDate?: string;
 }
 
+const MIN_AGE = 16;
+const MAX_AGE = 80;
+
+function toIsoDate(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function parseIsoDate(value: string): Date | null {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
+}
+
+function parseDisplayDate(value: string): Date | null {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return null;
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  return date;
+}
+
+function parseBirthDate(value: string): Date | null {
+  return parseIsoDate(value) ?? parseDisplayDate(value);
+}
+
+function getAge(date: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const monthDiff = today.getMonth() - date.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
+    age -= 1;
+  }
+  return age;
+}
+
 export default function Preferences() {
   const navigate = useNavigate();
   const { user } = useUser();
@@ -41,44 +83,61 @@ export default function Preferences() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  // Datepicker bounds (16–80 anos)
-  // Helpers removed (react-datepicker uses Date objects for bounds)
+  const maxBirthDate = useMemo(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - MIN_AGE);
+    return date;
+  }, []);
+
+  const minBirthDate = useMemo(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - MAX_AGE);
+    return date;
+  }, []);
 
   useEffect(() => {
     loadPreferences();
   }, []);
 
-  // Função para validar idade
-  function validateAge(birthDateString: string): boolean {
-    if (!birthDateString) return false;
-    
-    const birthDate = (() => { const m = birthDateString.match(/^(\\d{4})-(\\d{2})-(\\d{2})/); return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null; })();
-    if (!birthDate) return false;
-    const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    // Ajusta a idade se o aniversário ainda não passou este ano
-    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
-      ? age - 1 
-      : age;
-    
-    return actualAge >= 16 && actualAge <= 80;
+  function validateBirthDate(value: string): { valid: boolean; message?: string; normalized?: string } {
+    if (!value.trim()) {
+      return { valid: false, message: "Data de nascimento é obrigatória." };
+    }
+
+    const parsed = parseBirthDate(value);
+    if (!parsed) {
+      return { valid: false, message: "Informe uma data válida no formato dd/mm/aaaa." };
+    }
+
+    const age = getAge(parsed);
+    if (age < MIN_AGE || age > MAX_AGE) {
+      return { valid: false, message: "Você deve ter entre 16 e 80 anos." };
+    }
+
+    return { valid: true, normalized: toIsoDate(parsed) };
   }
 
-  // Função para validar os campos
-  function validateFields(): boolean {
+  function validateFields(): { valid: boolean; normalizedBirthDate?: string } {
     const newErrors: {[key: string]: string} = {};
-    
-    // Validação da data de nascimento - obrigatória se não existir
-    if (!birthDate) {
-      newErrors.birthDate = "Data de nascimento é obrigatória.";
-    } else if (!validateAge(birthDate)) {
-      newErrors.birthDate = "Você deve ter entre 16 e 80 anos.";
+
+    const birthDateValidation = validateBirthDate(birthDate);
+    if (!birthDateValidation.valid) {
+      newErrors.birthDate = birthDateValidation.message || "Data de nascimento inválida.";
     }
-    
+
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return {
+      valid: Object.keys(newErrors).length === 0,
+      normalizedBirthDate: birthDateValidation.normalized,
+    };
+  }
+
+  function onBirthDateChange(date: Date | null) {
+    setBirthDateObj(date);
+    setBirthDate(date ? toIsoDate(date) : "");
+    if (errors.birthDate) {
+      setErrors((previous) => ({ ...previous, birthDate: "" }));
+    }
   }
 
   async function loadPreferences() {
@@ -98,7 +157,7 @@ export default function Preferences() {
           setName(data.name || "");
           const bd = data.birthDate || "";
           setBirthDate(bd);
-          setBirthDateObj(bd ? new Date(bd) : null);
+          setBirthDateObj(bd ? parseBirthDate(bd) : null);
         }
       }
 
@@ -119,11 +178,13 @@ export default function Preferences() {
     setMessage(null);
     setErrors({});
 
-    // Validar campos antes de salvar
-    if (!validateFields()) {
+    const { valid, normalizedBirthDate } = validateFields();
+    if (!valid || !normalizedBirthDate) {
       setSaving(false);
       return;
     }
+
+    setBirthDate(normalizedBirthDate);
 
     try {
       // Salva preferências no servidor
@@ -139,7 +200,7 @@ export default function Preferences() {
           },
           body: JSON.stringify({
             name: name.trim() || null,
-            birthDate: birthDate || null,
+            birthDate: normalizedBirthDate,
           }),
         });
 
@@ -173,18 +234,18 @@ export default function Preferences() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F3F4F6] to-[#E5E7EB] p-4">
-      <div className="mx-auto max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-[#F3F4F6] via-[#EEF3F7] to-[#E5E7EB] p-4">
+      <div className="mx-auto max-w-6xl">
         {/* Header */}
-        <header className="mb-6">
+        <header className="mb-7">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center">
-                <span className="text-white text-xl">⚙️</span>
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#2F6C92] to-[#41B36E] flex items-center justify-center shadow-lg shadow-[#2F6C92]/20">
+                <span className="text-white text-2xl">⚙️</span>
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-[#2F6C92]">Perfil e Preferências</h1>
-                <p className="text-[#2F6C92]/70 text-sm">
+                <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#2F6C92]">Perfil e Preferências</h1>
+                <p className="text-[#2F6C92]/80 text-lg">
                   Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>! 
                   Ajuste seu perfil, idioma e notificações.
                 </p>
@@ -194,7 +255,7 @@ export default function Preferences() {
           </div>
         </header>
 
-        <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <section className="bg-white rounded-[26px] p-6 sm:p-8 shadow-[0_24px_45px_-20px_rgba(15,23,42,0.28)] border border-slate-200/90">
           {loading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2F6C92]"></div>
@@ -204,7 +265,7 @@ export default function Preferences() {
 
           <div className={loading ? 'opacity-50 pointer-events-none' : ''}>
             {/* Informações Pessoais */}
-            <div className="mb-8">
+            <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
               <h2 className="text-xl font-bold text-[#2F6C92] mb-6 flex items-center gap-2">
                 <span>👤</span> Informações Pessoais
               </h2>
@@ -233,12 +294,7 @@ export default function Preferences() {
                   <DatePicker
                     id="birthDate"
                     selected={birthDateObj}
-                    onChange={(date: Date | null) => {
-                      setBirthDateObj(date);
-                      const iso = date ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}` : "";
-                      setBirthDate(iso);
-                      if (errors.birthDate) setErrors(prev => ({ ...prev, birthDate: '' }));
-                    }}
+                    onChange={onBirthDateChange}
                     dateFormat="dd/MM/yyyy"
                     placeholderText="dd/mm/aaaa"
                     locale="pt-BR"
@@ -248,8 +304,8 @@ export default function Preferences() {
                     showMonthDropdown
                     showYearDropdown
                     dropdownMode="select"
-                    maxDate={useMemo(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 16); return d; }, [])}
-                    minDate={useMemo(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 80); return d; }, [])}
+                    maxDate={maxBirthDate}
+                    minDate={minBirthDate}
                     disabled={loading}
                   />
                   {errors.birthDate && (
@@ -257,13 +313,13 @@ export default function Preferences() {
                       <span>⚠️</span> {errors.birthDate}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500">Idade permitida: 16 a 80 anos</p>
+                  <p className="text-xs text-gray-500">Idade permitida: {MIN_AGE} a {MAX_AGE} anos</p>
                 </div>
               </div>
             </div>
 
             {/* Preferências do Sistema */}
-            <div className="mb-8">
+            <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
               <h2 className="text-xl font-bold text-[#2F6C92] mb-6 flex items-center gap-2">
                 <span>🔧</span> Preferências do Sistema
               </h2>
@@ -310,12 +366,12 @@ export default function Preferences() {
             </div>
 
             {/* Ações */}
-            <div className="border-t border-gray-100 pt-6">
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div className="border-t border-slate-200 pt-6">
+              <div className="flex flex-col lg:flex-row gap-3">
                 <button 
                   onClick={save} 
                   disabled={saving || loading}
-                  className="h-12 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white font-semibold px-8 hover:from-[#10B981] hover:to-[#41B36E] hover:brightness-110 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  className="h-14 rounded-xl bg-gradient-to-r from-[#41B36E] to-[#10B981] text-white font-semibold px-8 hover:from-[#10B981] hover:to-[#41B36E] hover:brightness-110 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2 cursor-pointer min-w-[220px]"
                 >
                   {saving ? (
                     <>
@@ -333,7 +389,7 @@ export default function Preferences() {
                 <button 
                   onClick={resetAssessment} 
                   disabled={loading}
-                  className="h-12 rounded-xl border-2 border-[#F96B11] text-[#F96B11] font-semibold px-6 hover:bg-[#F96B11] hover:text-white hover:brightness-110 transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+                  className="h-14 rounded-xl border-2 border-[#F96B11] text-[#F96B11] font-semibold px-6 hover:bg-[#F96B11] hover:text-white hover:brightness-110 transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer min-w-[220px]"
                 >
                   <span>🔄</span>
                   Redefinir Avaliação
@@ -341,14 +397,14 @@ export default function Preferences() {
                 
                 <button 
                   onClick={() => navigate(-1)} 
-                  className="h-12 rounded-xl border-2 border-gray-300 text-gray-600 font-medium px-6 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                  className="h-14 rounded-xl border-2 border-gray-300 text-gray-600 font-medium px-6 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer min-w-[150px]"
                 >
                   <span>←</span>
                   Voltar
                 </button>
                 <button
                   onClick={() => navigate('/subscriptions')}
-                  className="h-12 rounded-xl border-2 border-[#2F6C92] text-[#2F6C92] font-semibold px-6 hover:bg-[#F3F4F6] hover:border-[#2F6C92] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                  className="h-14 rounded-xl border-2 border-[#2F6C92] text-[#2F6C92] font-semibold px-6 hover:bg-[#F3F4F6] hover:border-[#2F6C92] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer min-w-[240px]"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-2.21 0-4 1.79-4 4m8 0a4 4 0 01-4 4m0-8a8 8 0 100 16 8 8 0 000-16z" />
