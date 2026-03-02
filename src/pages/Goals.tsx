@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "../components/UserMenu";
+import PageLoader from "../components/PageLoader";
 import { useUser } from "../hooks/useUser";
 import { getPreferredFirstName } from "../utils/userDisplay";
 import { createGoal, updateGoal, deleteGoal, getGoals } from "../services/goalsService";
@@ -139,6 +140,7 @@ export default function Goals() {
   const [subscriptionActive, setSubscriptionActive] = useState<boolean>(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
+  const [checkoutStatusMessage, setCheckoutStatusMessage] = useState("Aguardando confirmacao do pagamento...");
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const [lastPlan, setLastPlan] = useState<'monthly' | 'annual' | null>(null);
   const [showFreeBanner, setShowFreeBanner] = useState(true);
@@ -163,9 +165,12 @@ export default function Goals() {
     intervalMs = 3000,
     postCloseGraceMs = 2 * 60 * 1000
   ) {
+    setCheckoutStatusMessage("Aguardando confirmacao do pagamento...");
     setIsCheckingSubscription(true);
+    try { sessionStorage.setItem("lb_checkout_polling", "1"); } catch {}
     const start = Date.now();
     let closedAt: number | null = null;
+    let checkoutSessionId: string | null = null;
     let attempts = 0;
     return new Promise<void>((resolve) => {
       const timer = window.setInterval(async () => {
@@ -177,12 +182,19 @@ export default function Goals() {
             const href = popup.location.href;
             if (href && href.startsWith(window.location.origin)) {
               if (href.includes('checkout=success')) {
+                try {
+                  const callbackUrl = new URL(href);
+                  checkoutSessionId = callbackUrl.searchParams.get('session_id');
+                } catch {
+                  // ignore
+                }
+                setCheckoutStatusMessage("Sincronizando assinatura...");
                 try { popup.close(); } catch {}
                 closedAt = closedAt ?? now;
                 popup = null;
                 // Ao detectar sucesso na própria janela, tenta sincronizar imediatamente
                 try {
-                  await syncSubscription();
+                  await syncSubscription({ checkoutSessionId: checkoutSessionId || undefined });
                 } catch {}
               } else if (href.includes('checkout=cancel')) {
                 try { popup.close(); } catch {}
@@ -198,6 +210,7 @@ export default function Goals() {
 
         // Gerencia fechamento manual do popup
         if (popup && popup.closed) {
+          setCheckoutStatusMessage("Pagamento recebido. Confirmando seu plano...");
           closedAt = closedAt ?? now;
           popup = null;
         }
@@ -206,7 +219,8 @@ export default function Goals() {
         try {
           // A cada 2 tentativas, faz uma sincronização ativa com o backend
           if (attempts % 2 === 0) {
-            try { await syncSubscription(); } catch {}
+            setCheckoutStatusMessage("Atualizando status do plano...");
+            try { await syncSubscription({ checkoutSessionId: checkoutSessionId || undefined }); } catch {}
           }
 
           const info = await getSubscriptionStatus();
@@ -216,6 +230,7 @@ export default function Goals() {
             setSubscriptionActive(true);
             setShowUpgrade(false);
             setIsCheckingSubscription(false);
+            try { sessionStorage.removeItem("lb_checkout_polling"); } catch {}
             resolve();
             return;
           }
@@ -227,8 +242,9 @@ export default function Goals() {
         if (baseTimedOut || (closedAt && graceTimedOut)) {
           window.clearInterval(timer);
           setIsCheckingSubscription(false);
+          try { sessionStorage.removeItem("lb_checkout_polling"); } catch {}
           if (!subscriptionActive) {
-            setUpgradeError('Checkout não concluído. Tente novamente.');
+            setUpgradeError('Pagamento processado, mas o plano ainda nao foi confirmado. Tente novamente em instantes.');
           }
           resolve();
         }
@@ -338,32 +354,6 @@ export default function Goals() {
     })();
   }, []);
 
-  // Escuta retorno do checkout no popup e tenta fechar/persistir
-  useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      try {
-        if (e.origin !== window.location.origin) return;
-        const data: any = e.data || {};
-        if (data?.type === 'lb:checkout') {
-          setShowUpgrade(false);
-          // Após retorno, aguardamos webhook ativar assinatura
-          // Reutiliza polling sem popup para detectar ativação
-          (async () => {
-            // Tenta sincronizar imediatamente ao receber sucesso do popup
-            if (data?.status === 'success') {
-              try { await syncSubscription(); } catch {}
-            }
-            await pollSubscriptionUntilActive(null).catch(() => {/*noop*/});
-          })();
-        }
-      } catch {
-        // ignore
-      }
-    }
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, []);
-  
   const currentPeriodGoals = useMemo(() => {
     console.log('🔍 Filtrando metas para o período atual:');
     console.log('- Período atual:', state.currentPeriod);
@@ -998,6 +988,10 @@ export default function Goals() {
             setUpgradeError(e?.message || 'Falha ao iniciar checkout');
           }
         }}/>
+
+      {isCheckingSubscription && (
+        <PageLoader overlay message={checkoutStatusMessage} />
+      )}
     </div>
   );
 }

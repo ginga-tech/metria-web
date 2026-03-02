@@ -18,7 +18,7 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
     try {
       const API = getApiBaseUrl();
       // FORÃ‡A a porta 5173 para evitar problemas com configuraÃ§Ã£o do Google Console
-      const redirectUri = `http://localhost:5173/oauth/callback`;
+      const redirectUri = `${window.location.origin}/oauth/callback`;
       const authUrl = `${API}/api/auth/google/start?redirectUri=${encodeURIComponent(redirectUri)}`;
 
       // ConfiguraÃ§Ãµes do popup
@@ -78,7 +78,7 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
             const popupUrl = popup.location.href;
             
             // Se conseguiu acessar, significa que estÃ¡ no mesmo domÃ­nio
-            if (popupUrl.includes('localhost:5173')) {
+            if (popupUrl.startsWith(window.location.origin)) {
               const url = new URL(popupUrl);
               
               // Verifica se tem token no hash
@@ -147,4 +147,5 @@ export function useGoogleOAuth(): UseGoogleOAuthResult {
     loginWithGoogle
   };
 }
+
 

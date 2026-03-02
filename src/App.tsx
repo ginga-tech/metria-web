@@ -1,5 +1,5 @@
 import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSubscriptionStatus, syncSubscription } from "./services/billingService";
 import MetriaAuth from "./pages/MetriaAuth";
 import Assessment from "./pages/Assessment";
@@ -13,130 +13,137 @@ import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GlobalLoader from "./components/GlobalLoader";
 import Footer from "./components/Footer";
+import PageLoader from "./components/PageLoader";
 
 // Layout component que inclui o GlobalLoader
 function CheckoutAutoClose() {
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  const [checkoutMessage, setCheckoutMessage] = useState("Processando pagamento...");
+  const isReconcilingRef = useRef(false);
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
+    const clearCheckoutParamsFromUrl = () => {
+      try {
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has("checkout") && !url.searchParams.has("session_id")) return;
+        url.searchParams.delete("checkout");
+        url.searchParams.delete("session_id");
+        window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+      } catch {
+        // ignore
+      }
+    };
+    const reconcileCheckout = async (status: string, checkoutSessionId?: string | null) => {
+      if (status !== "success") return;
+      if (isReconcilingRef.current) return;
+      isReconcilingRef.current = true;
+      setIsProcessingCheckout(true);
+      setCheckoutMessage("Confirmando seu pagamento...");
+      const started = Date.now();
+      const timeoutMs = 5 * 60 * 1000;
+      const intervalMs = 2000;
+      let attempts = 0;
+      try {
+        try {
+          setCheckoutMessage("Sincronizando assinatura...");
+          await syncSubscription({ checkoutSessionId: checkoutSessionId || undefined });
+        } catch {
+          // segue com polling
+        }
+        await new Promise<void>((resolve) => {
+          const timer = window.setInterval(async () => {
+            attempts++;
+            try {
+              if (attempts % 5 === 0) {
+                setCheckoutMessage("Atualizando status do plano...");
+                try {
+                  await syncSubscription({ checkoutSessionId: checkoutSessionId || undefined });
+                } catch {
+                  // segue
+                }
+              }
+
+              const info = await getSubscriptionStatus();
+              if (info?.active) {
+                window.clearInterval(timer);
+                try {
+                  sessionStorage.setItem("lb_show_sub_banner", "1");
+                } catch {
+                  // ignore
+                }
+                clearCheckoutParamsFromUrl();
+                window.location.reload();
+                resolve();
+                return;
+              }
+
+              if (Date.now() - started > timeoutMs) {
+                window.clearInterval(timer);
+                setCheckoutMessage("Pagamento confirmado no Stripe, aguardando sincronizacao final...");
+                resolve();
+              }
+            } catch {
+              if (Date.now() - started > timeoutMs) {
+                window.clearInterval(timer);
+                setCheckoutMessage("Nao foi possivel confirmar o plano automaticamente.");
+                resolve();
+              }
+            }
+          }, intervalMs);
+        });
+      } finally {
+        setIsProcessingCheckout(false);
+        isReconcilingRef.current = false;
+      }
+    };
     try {
       const params = new URLSearchParams(window.location.search);
-      const checkout = params.get('checkout');
-      if (checkout === 'success' || checkout === 'cancel') {
+      const checkout = params.get("checkout");
+      const sessionId = params.get("session_id");
+      if (checkout === "success" || checkout === "cancel") {
         try {
           if (window.opener && window.opener !== window) {
-            window.opener.postMessage({ type: 'lb:checkout', status: checkout }, window.location.origin);
+            window.opener.postMessage(
+              { type: "lb:checkout", status: checkout, checkoutSessionId: sessionId },
+              window.location.origin
+            );
             window.close();
             return;
           }
         } catch {
           // ignore postMessage errors
         }
-
-        // Fallback: se não é popup (mesma aba), e houve sucesso, iniciar sync + polling mais agressivo
-        if (checkout === 'success') {
-          console.log('🎉 Checkout success detected, starting subscription sync...');
-          
-          // Tenta sincronizar imediatamente
-          (async () => { 
-            try { 
-              console.log('🔄 Attempting immediate sync...');
-              const result = await syncSubscription(); 
-              console.log('✅ Immediate sync result:', result);
-            } catch (error) {
-              console.log('❌ Immediate sync failed:', error);
-            }
-          })();
-          
-          const started = Date.now();
-          const timeoutMs = 5 * 60 * 1000; // 5 minutos (aumentado)
-          const interval = 2000; // 2s (mais frequente)
-          let attempts = 0;
-          const maxAttempts = 150; // 5 minutos / 2s = 150 tentativas
-          
-          const poll = window.setInterval(async () => {
-            attempts++;
-            console.log(`🔍 Polling attempt ${attempts}/${maxAttempts}...`);
-            
-            try {
-              // Primeiro tenta sync novamente
-              if (attempts % 5 === 0) { // A cada 10 segundos
-                console.log('🔄 Attempting sync again...');
-                try {
-                  await syncSubscription();
-                } catch (syncError) {
-                  console.log('❌ Sync retry failed:', syncError);
-                }
-              }
-              
-              // Verifica status
-              const info = await getSubscriptionStatus();
-              console.log('📊 Subscription status:', info);
-              
-              if (info?.active) {
-                console.log('🎉 Subscription activated! Stopping polling.');
-                try { sessionStorage.setItem('lb_show_sub_banner', '1'); } catch {}
-                window.clearInterval(poll);
-                // Força reload da página para atualizar UI
-                window.location.reload();
-              } else if (Date.now() - started > timeoutMs || attempts >= maxAttempts) {
-                console.log('⏰ Polling timeout reached. Stopping.');
-                window.clearInterval(poll);
-              }
-            } catch (error) {
-              console.log('❌ Polling error:', error);
-              if (Date.now() - started > timeoutMs || attempts >= maxAttempts) {
-                console.log('⏰ Polling timeout reached after error. Stopping.');
-                window.clearInterval(poll);
-              }
-            }
-          }, interval);
+        if (checkout === "cancel") {
+          clearCheckoutParamsFromUrl();
+        } else {
+          reconcileCheckout(checkout, sessionId);
         }
       }
     } catch {
       // ignore
     }
-    // Also listen for popup messages globally and trigger sync + polling
-    function onMessage(e: MessageEvent) {
+    const onMessage = (e: MessageEvent) => {
       try {
         if (e.origin !== window.location.origin) return;
+        try {
+          if (sessionStorage.getItem("lb_checkout_polling") === "1") return;
+        } catch {
+          // ignore
+        }
         const data: any = e.data || {};
-        if (data?.type === 'lb:checkout') {
-          (async () => {
-            if (data?.status === 'success') {
-              try { await syncSubscription(); } catch {}
-            }
-            // Start a short polling period to reflect state
-            const started = Date.now();
-            const timeoutMs = 2 * 60 * 1000;
-            const interval = 2000;
-            const poll = window.setInterval(async () => {
-              try {
-                const info = await getSubscriptionStatus();
-                if (info?.active) {
-                  window.clearInterval(poll);
-                  try { sessionStorage.setItem('lb_show_sub_banner', '1'); } catch {}
-                  window.location.reload();
-                } else if (Date.now() - started > timeoutMs) {
-                  window.clearInterval(poll);
-                }
-              } catch {
-                if (Date.now() - started > timeoutMs) {
-                  window.clearInterval(poll);
-                }
-              }
-            }, interval);
-          })();
+        if (data?.type === "lb:checkout") {
+          reconcileCheckout(data?.status, data?.checkoutSessionId);
         }
       } catch {
         // ignore
       }
-    }
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
   }, []);
-  return null as any;
+  if (!isProcessingCheckout) return null;
+  return <PageLoader overlay message={checkoutMessage} />;
 }
-
 function Layout() {
   return (
     <>
