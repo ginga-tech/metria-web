@@ -58,13 +58,13 @@ export default function MetriaAuth() {
   
   if (mode === "signup" && name.trim().length < 2) next.name = "O nome deve ter pelo menos 2 caracteres";
 
-  if (!emailRegex.test(eTrim)) next.email = "Por favor, insira um e-mail vÃ¡lido";
+  if (!emailRegex.test(eTrim)) next.email = "Por favor, insira um e-mail válido";
   
   if (mode === "signup") {
     if (!p || p.length < 6) next.password = "A senha deve ter pelo menos 6 caracteres";
-    if (p !== confirmPassword) next.confirmPassword = "As senhas nÃ£o coincidem";
+    if (p !== confirmPassword) next.confirmPassword = "As senhas não coincidem";
   } else {
-    if (!p) next.password = "A senha Ã© obrigatÃ³ria";
+    if (!p) next.password = "A senha é obrigatória";
   }
   
   setErrors(next);
@@ -82,7 +82,7 @@ export default function MetriaAuth() {
       token = (res.token || '').replace(/^Bearer\s+/i, '');
       localStorage.setItem("lb_token", token);
     }
-    setMessage("AutenticaÃ§Ã£o realizada com sucesso!");
+    setMessage("Autenticação realizada com sucesso!");
     
     // Verificar status do usuário antes de redirecionar
     try {
@@ -106,15 +106,15 @@ export default function MetriaAuth() {
       navigate("/assessment");
     }
   } catch (err: any) {
-    const errorMessage = err?.message ?? "Erro ao realizar autenticaÃ§Ã£o";
+    const errorMessage = err?.message ?? "Erro ao realizar autenticação";
     // Traduzir mensagens de erro comuns da API
     let translatedMessage = errorMessage;
     if (errorMessage.includes("Email ja cadastrado")) {
-      translatedMessage = "Este e-mail jÃ¡ estÃ¡ cadastrado. Tente fazer login.";
+      translatedMessage = "Este e-mail já está cadastrado. Tente fazer login.";
     } else if (errorMessage.includes("Unauthorized")) {
       translatedMessage = "E-mail ou senha incorretos. Verifique suas credenciais.";
     } else if (errorMessage.includes("Invalid email")) {
-      translatedMessage = "E-mail invÃ¡lido. Verifique o formato do e-mail.";
+      translatedMessage = "E-mail inválido. Verifique o formato do e-mail.";
     } else if (errorMessage.includes("Password")) {
       translatedMessage = "Erro na senha. Verifique se atende aos requisitos.";
     }
@@ -303,7 +303,7 @@ export default function MetriaAuth() {
                     required
                     className={`h-12 w-full rounded-xl border-2 bg-slate-50 px-3 text-slate-900 outline-none transition ${errors.email ? "border-red-300 focus:ring-2 focus:ring-red-200 pr-10" : "border-slate-100 focus:border-[#A3E635] focus:ring-2 focus:ring-[#A3E635]/20"}`}
                     placeholder="voce@exemplo.com"
-                    title="Por favor, insira um endereÃ§o de e-mail vÃ¡lido"
+                    title="Por favor, insira um endereço de e-mail válido"
                   />
                   {errors.email && (
                     <Tooltip content={errors.email} type="error" position="bottom">
