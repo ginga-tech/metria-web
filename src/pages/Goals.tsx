@@ -137,6 +137,7 @@ export default function Goals() {
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("");
+  const [goalsView, setGoalsView] = useState<"period" | "all_active">("period");
   const [subscriptionActive, setSubscriptionActive] = useState<boolean>(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
@@ -456,12 +457,26 @@ export default function Goals() {
     return filtered;
   }, [state.items, state.currentPeriod, periodDates, filterCategory]);
 
+  const activeGoalsLimited = useMemo(() => {
+    return state.items
+      .filter((goal) => goal.isActive !== false)
+      .filter((goal) => !filterCategory || goal.category === filterCategory)
+      .sort((a, b) => {
+        const aTime = Date.parse(a.updatedAtUtc || a.endDate || a.startDate || "");
+        const bTime = Date.parse(b.updatedAtUtc || b.endDate || b.startDate || "");
+        return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+      })
+      .slice(0, 10);
+  }, [state.items, filterCategory]);
+
+  const displayedGoals = goalsView === "all_active" ? activeGoalsLimited : currentPeriodGoals;
+
   const stats = useMemo(() => {
-    const total = currentPeriodGoals.length;
-    const done = currentPeriodGoals.filter((g) => g.done).length;
+    const total = displayedGoals.length;
+    const done = displayedGoals.filter((g) => g.done).length;
     const pct = total === 0 ? 0 : Math.round((done / total) * 100);
     return { total, done, pct };
-  }, [currentPeriodGoals]);
+  }, [displayedGoals]);
 
   function changePeriod(newPeriod: GoalPeriod) {
     setState(s => ({ 
@@ -839,31 +854,54 @@ export default function Goals() {
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-bold text-[#2F6C92] mb-4 flex items-center gap-2">
                 <span style={{ color: currentPeriodInfo.color }}>{currentPeriodInfo.icon}</span>
-                Metas {currentPeriodPluralLabel}
+                {goalsView === "all_active" ? "Todas as Metas Ativas" : `Metas ${currentPeriodPluralLabel}`}
               </h3>
-              <div className="mb-4 flex items-center gap-3">
-                <label className="text-sm text-gray-600">Filtrar por categoria:</label>
-                <select
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                  className="h-10 md:w-72 rounded-xl border border-gray-200 px-3 bg-white text-[#2F6C92] outline-none focus:ring-2 focus:ring-[#41B36E] focus:border-transparent transition-all"
-                >
-                  <option value="">Todas</option>
-                  {SHARED_GOAL_CATEGORIES.map((c) => (
-                    <option key={c.key} value={c.key}>{c.label}</option>
-                  ))}
-                </select>
+              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-600">Exibição:</label>
+                  <select
+                    value={goalsView}
+                    onChange={(e) => setGoalsView(e.target.value as "period" | "all_active")}
+                    className="h-10 w-full md:w-72 rounded-xl border border-gray-200 px-3 bg-white text-[#2F6C92] outline-none focus:ring-2 focus:ring-[#41B36E] focus:border-transparent transition-all"
+                  >
+                    <option value="period">Metas do período atual</option>
+                    <option value="all_active">Todas as metas ativas (máx. 10)</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-gray-600">Filtrar por categoria:</label>
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="h-10 w-full md:w-72 rounded-xl border border-gray-200 px-3 bg-white text-[#2F6C92] outline-none focus:ring-2 focus:ring-[#41B36E] focus:border-transparent transition-all"
+                  >
+                    <option value="">Todas</option>
+                    {SHARED_GOAL_CATEGORIES.map((c) => (
+                      <option key={c.key} value={c.key}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              
-              {currentPeriodGoals.length === 0 ? (
+
+              {goalsView === "all_active" && (
+                <p className="mb-4 text-xs text-gray-500">
+                  Exibindo no máximo 10 metas ativas, ordenadas pelas mais recentes.
+                </p>
+              )}
+               
+              {displayedGoals.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🎯</div>
-                  <p className="text-gray-500 text-lg mb-2">Nenhuma meta definida ainda</p>
-                  <p className="text-gray-400 text-sm">Comece adicionando sua primeira meta {currentPeriodInfo.label.toLowerCase()}</p>
+                  <p className="text-gray-500 text-lg mb-2">Nenhuma meta encontrada</p>
+                  <p className="text-gray-400 text-sm">
+                    {goalsView === "all_active"
+                      ? "Não há metas ativas para o filtro selecionado."
+                      : `Comece adicionando sua primeira meta ${currentPeriodInfo.label.toLowerCase()}`}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {currentPeriodGoals.map((goal) => (
+                  {displayedGoals.map((goal) => (
                     <div key={goal.id} className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 ${
                       goal.done 
                         ? 'border-[#41B36E]/30 bg-[#41B36E]/5' 
