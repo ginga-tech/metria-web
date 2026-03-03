@@ -129,6 +129,7 @@ function getPeriodDates(
 }
 
 export default function Goals() {
+  const ACTIVE_GOALS_PAGE_SIZE = 10;
   const navigate = useNavigate();
   const { user } = useUser();
   const [text, setText] = useState("");
@@ -138,6 +139,7 @@ export default function Goals() {
   const [customEndDate, setCustomEndDate] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [goalsView, setGoalsView] = useState<"period" | "all_active">("period");
+  const [activeGoalsPage, setActiveGoalsPage] = useState(1);
   const [subscriptionActive, setSubscriptionActive] = useState<boolean>(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
@@ -457,7 +459,7 @@ export default function Goals() {
     return filtered;
   }, [state.items, state.currentPeriod, periodDates, filterCategory]);
 
-  const activeGoalsLimited = useMemo(() => {
+  const activeGoalsAll = useMemo(() => {
     return state.items
       .filter((goal) => goal.isActive !== false)
       .filter((goal) => !filterCategory || goal.category === filterCategory)
@@ -465,11 +467,29 @@ export default function Goals() {
         const aTime = Date.parse(a.updatedAtUtc || a.endDate || a.startDate || "");
         const bTime = Date.parse(b.updatedAtUtc || b.endDate || b.startDate || "");
         return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
-      })
-      .slice(0, 10);
+      });
   }, [state.items, filterCategory]);
 
-  const displayedGoals = goalsView === "all_active" ? activeGoalsLimited : currentPeriodGoals;
+  const totalActiveGoalsPages = Math.max(1, Math.ceil(activeGoalsAll.length / ACTIVE_GOALS_PAGE_SIZE));
+  const safeActiveGoalsPage = Math.min(activeGoalsPage, totalActiveGoalsPages);
+
+  useEffect(() => {
+    setActiveGoalsPage(1);
+  }, [goalsView, filterCategory]);
+
+  useEffect(() => {
+    if (activeGoalsPage > totalActiveGoalsPages) {
+      setActiveGoalsPage(totalActiveGoalsPages);
+    }
+  }, [activeGoalsPage, totalActiveGoalsPages]);
+
+  const paginatedActiveGoals = useMemo(() => {
+    const start = (safeActiveGoalsPage - 1) * ACTIVE_GOALS_PAGE_SIZE;
+    const end = start + ACTIVE_GOALS_PAGE_SIZE;
+    return activeGoalsAll.slice(start, end);
+  }, [activeGoalsAll, safeActiveGoalsPage, ACTIVE_GOALS_PAGE_SIZE]);
+
+  const displayedGoals = goalsView === "all_active" ? paginatedActiveGoals : currentPeriodGoals;
 
   const stats = useMemo(() => {
     const total = displayedGoals.length;
@@ -865,7 +885,7 @@ export default function Goals() {
                     className="h-10 w-full md:w-72 rounded-xl border border-gray-200 px-3 bg-white text-[#2F6C92] outline-none focus:ring-2 focus:ring-[#41B36E] focus:border-transparent transition-all"
                   >
                     <option value="period">Metas do período atual</option>
-                    <option value="all_active">Todas as metas ativas (máx. 10)</option>
+                    <option value="all_active">Todas as metas ativas (paginado)</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-3">
@@ -885,7 +905,7 @@ export default function Goals() {
 
               {goalsView === "all_active" && (
                 <p className="mb-4 text-xs text-gray-500">
-                  Exibindo no máximo 10 metas ativas, ordenadas pelas mais recentes.
+                  Exibindo metas ativas ordenadas pelas mais recentes (10 por página).
                 </p>
               )}
                
@@ -937,6 +957,37 @@ export default function Goals() {
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {goalsView === "all_active" && activeGoalsAll.length > ACTIVE_GOALS_PAGE_SIZE && (
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-gray-200 bg-slate-50 p-3">
+                  <p className="text-xs text-gray-600">
+                    {(() => {
+                      const start = (safeActiveGoalsPage - 1) * ACTIVE_GOALS_PAGE_SIZE + 1;
+                      const end = Math.min(safeActiveGoalsPage * ACTIVE_GOALS_PAGE_SIZE, activeGoalsAll.length);
+                      return `Mostrando ${start}-${end} de ${activeGoalsAll.length} metas ativas`;
+                    })()}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveGoalsPage((p) => Math.max(1, p - 1))}
+                      disabled={safeActiveGoalsPage <= 1}
+                      className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-[#2F6C92] hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Anterior
+                    </button>
+                    <span className="min-w-[110px] text-center text-sm font-medium text-[#2F6C92]">
+                      Página {safeActiveGoalsPage} de {totalActiveGoalsPages}
+                    </span>
+                    <button
+                      onClick={() => setActiveGoalsPage((p) => Math.min(totalActiveGoalsPages, p + 1))}
+                      disabled={safeActiveGoalsPage >= totalActiveGoalsPages}
+                      className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-[#2F6C92] hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Próxima
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
