@@ -226,10 +226,19 @@ export default function MetriaAuth() {
     } catch (error: any) {
       const rawMessage = error?.message ?? "Erro ao realizar autenticacao.";
       let translatedMessage = rawMessage;
+      const normalizedMessage = String(rawMessage).toLowerCase();
       if (rawMessage.includes("Email ja cadastrado")) {
         translatedMessage = "Este e-mail ja esta cadastrado. Tente fazer login.";
-      } else if (rawMessage.includes("Unauthorized")) {
-        translatedMessage = "E-mail ou senha incorretos.";
+      } else if (
+        mode === "login" &&
+        (
+          normalizedMessage.includes("erro 401") ||
+          normalizedMessage.includes("401") ||
+          normalizedMessage.includes("unauthorized") ||
+          normalizedMessage.includes("invalid credentials")
+        )
+      ) {
+        translatedMessage = "Usuário ou senha não existe.";
       } else if (rawMessage.includes("Invalid email")) {
         translatedMessage = "E-mail invalido. Verifique o formato.";
       }
