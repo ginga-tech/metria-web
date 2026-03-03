@@ -238,7 +238,7 @@ export default function MetriaAuth() {
           normalizedMessage.includes("invalid credentials")
         )
       ) {
-        translatedMessage = "Usuário ou senha não existe.";
+        translatedMessage = "Senha ou usuário incorretos.";
       } else if (rawMessage.includes("Invalid email")) {
         translatedMessage = "E-mail invalido. Verifique o formato.";
       }
