@@ -4,11 +4,10 @@ import metriaLogo from "../assets/metria-logo.svg";
 import "../styles/slider.css";
 import UserMenu from "../components/UserMenu";
 import { useUser } from "../hooks/useUser";
-import { getPreferredFirstName } from "../utils/userDisplay";
 import { DIMENSIONS, type DimensionKey } from "../constants/assessment";
 
 /**
- * metria — Autoavaliação (10 dimensões)
+ * Metria — Autoavaliação (10 dimensões)
  * Stack: React + TailwindCSS
  * Fluxo: usuário avalia 1–5 cada dimensão e envia → salva no backend e navega p/ dashboard
  * Paleta: Azul #2F6C92 | Verde #41B36E | Laranja #F96B11 | Cinza #F3F4F6 | Branco #FFFFFF
@@ -172,7 +171,7 @@ export default function Assessment() {
                 {isEditing ? "Editar Avaliação" : "Nova Avaliação"}
               </h1>
               <p className="text-sm text-[#2F6C92]/70">
-                Olá, <span className="font-semibold text-[#2F6C92]">{getPreferredFirstName(user?.name, user?.email)}</span>!
+                Olá, <span className="font-semibold text-[#2F6C92]">{user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}</span>!
               </p>
             </div>
           </div>
