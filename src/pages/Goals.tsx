@@ -163,90 +163,158 @@ export default function Goals() {
     popup: Window | null,
     timeoutMs = 10 * 60 * 1000,
     intervalMs = 3000,
-    postCloseGraceMs = 2 * 60 * 1000
+    postCloseGraceMs = 20 * 1000
   ) {
+    if (!popup) {
+      setUpgradeError("Nao foi possivel abrir o popup de pagamento. Habilite popups e tente novamente.");
+      setIsCheckingSubscription(false);
+      return;
+    }
+
     setCheckoutStatusMessage("Aguardando confirmacao do pagamento...");
     setIsCheckingSubscription(true);
-    try { sessionStorage.setItem("lb_checkout_polling", "1"); } catch {}
+    try { sessionStorage.setItem("lb_checkout_polling", "1"); } catch { /* ignore */ }
+
     const start = Date.now();
     let closedAt: number | null = null;
     let checkoutSessionId: string | null = null;
     let attempts = 0;
+    let checkoutStatus: "pending" | "success" | "cancel" = "pending";
+    let done = false;
+    let timer: number | null = null;
+    let resolvePromise: (() => void) | null = null;
+
+    const cleanup = () => {
+      if (timer !== null) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+      window.removeEventListener("message", onCheckoutMessage);
+      setIsCheckingSubscription(false);
+      try { sessionStorage.removeItem("lb_checkout_polling"); } catch { /* ignore */ }
+    };
+
+    const finish = (status: "success" | "cancel" | "timeout" | "closed") => {
+      if (done) return;
+      done = true;
+      cleanup();
+      if (resolvePromise) {
+        resolvePromise();
+        resolvePromise = null;
+      }
+
+      if (status === "success") {
+        setSubscriptionActive(true);
+        setShowUpgrade(false);
+        return;
+      }
+
+      if (status === "cancel") {
+        setUpgradeError("Pagamento cancelado. Voce continua no plano gratuito e pode tentar novamente.");
+        return;
+      }
+
+      if (status === "closed") {
+        setUpgradeError("Pagamento nao confirmado. Feche o popup e tente novamente quando quiser.");
+        return;
+      }
+
+      setUpgradeError("Pagamento nao foi confirmado dentro do tempo esperado. Tente novamente.");
+    };
+
+    const onCheckoutMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      const data = (e.data ?? {}) as { type?: string; status?: string; checkoutSessionId?: string | null };
+      if (data.type !== "lb:checkout") return;
+
+      if (data.checkoutSessionId) {
+        checkoutSessionId = data.checkoutSessionId;
+      }
+
+      if (data.status === "cancel") {
+        checkoutStatus = "cancel";
+        try { if (popup && !popup.closed) popup.close(); } catch { /* ignore */ }
+        finish("cancel");
+      } else if (data.status === "success") {
+        checkoutStatus = "success";
+        setCheckoutStatusMessage("Sincronizando assinatura...");
+      }
+    };
+
+    window.addEventListener("message", onCheckoutMessage);
+
     return new Promise<void>((resolve) => {
-      const timer = window.setInterval(async () => {
+      resolvePromise = resolve;
+      timer = window.setInterval(async () => {
+        if (done) return;
+
         attempts++;
         const now = Date.now();
-        // Se possível, detecta callback de sucesso mesma origem e fecha popup
+
         if (popup) {
           try {
             const href = popup.location.href;
             if (href && href.startsWith(window.location.origin)) {
-              if (href.includes('checkout=success')) {
+              if (href.includes("checkout=success")) {
+                checkoutStatus = "success";
                 try {
                   const callbackUrl = new URL(href);
-                  checkoutSessionId = callbackUrl.searchParams.get('session_id');
+                  checkoutSessionId = callbackUrl.searchParams.get("session_id");
                 } catch {
                   // ignore
                 }
                 setCheckoutStatusMessage("Sincronizando assinatura...");
-                try { popup.close(); } catch {}
+                try { popup.close(); } catch { /* ignore */ }
                 closedAt = closedAt ?? now;
                 popup = null;
-                // Ao detectar sucesso na própria janela, tenta sincronizar imediatamente
-                try {
-                  await syncSubscription({ checkoutSessionId: checkoutSessionId || undefined });
-                } catch {}
-              } else if (href.includes('checkout=cancel')) {
-                try { popup.close(); } catch {}
-                closedAt = closedAt ?? now;
+              } else if (href.includes("checkout=cancel")) {
+                checkoutStatus = "cancel";
+                try { popup.close(); } catch { /* ignore */ }
                 popup = null;
-                setUpgradeError('Pagamento cancelado pelo usuário.');
+                finish("cancel");
+                return;
               }
             }
           } catch {
-            // CORS enquanto ainda está no domínio do Stripe; ignorar
+            // CORS enquanto ainda estiver no dominio do Stripe
           }
         }
 
-        // Gerencia fechamento manual do popup
         if (popup && popup.closed) {
-          setCheckoutStatusMessage("Pagamento recebido. Confirmando seu plano...");
           closedAt = closedAt ?? now;
           popup = null;
+          if (checkoutStatus !== "success") {
+            setCheckoutStatusMessage("Verificando confirmacao do pagamento...");
+          }
         }
 
-        // Verifica status de assinatura
         try {
-          // A cada 2 tentativas, faz uma sincronização ativa com o backend
-          if (attempts % 2 === 0) {
-            setCheckoutStatusMessage("Atualizando status do plano...");
-            try { await syncSubscription({ checkoutSessionId: checkoutSessionId || undefined }); } catch {}
+          if (checkoutStatus === "success" || attempts % 2 === 0) {
+            if (checkoutStatus === "success") {
+              setCheckoutStatusMessage("Atualizando status do plano...");
+            }
+            try { await syncSubscription({ checkoutSessionId: checkoutSessionId || undefined }); } catch { /* ignore */ }
           }
 
           const info = await getSubscriptionStatus();
           if (info?.active) {
-            try { if (popup && !popup.closed) popup.close(); } catch {}
-            window.clearInterval(timer);
-            setSubscriptionActive(true);
-            setShowUpgrade(false);
-            setIsCheckingSubscription(false);
-            try { sessionStorage.removeItem("lb_checkout_polling"); } catch {}
-            resolve();
+            try { if (popup && !popup.closed) popup.close(); } catch { /* ignore */ }
+            finish("success");
             return;
           }
-        } catch {}
+        } catch {
+          // tenta novamente ate o timeout
+        }
 
-        // Condições de encerramento por tempo
         const baseTimedOut = now - start > timeoutMs;
         const graceTimedOut = closedAt ? now - closedAt > postCloseGraceMs : false;
+
         if (baseTimedOut || (closedAt && graceTimedOut)) {
-          window.clearInterval(timer);
-          setIsCheckingSubscription(false);
-          try { sessionStorage.removeItem("lb_checkout_polling"); } catch {}
-          if (!subscriptionActive) {
-            setUpgradeError('Pagamento processado, mas o plano ainda nao foi confirmado. Tente novamente em instantes.');
+          if (checkoutStatus === "success") {
+            finish("timeout");
+          } else {
+            finish("closed");
           }
-          resolve();
         }
       }, intervalMs);
     });
@@ -841,7 +909,10 @@ export default function Goals() {
       {/* Upgrade Modal (paywall) */}
       <UpgradeModal
         isOpen={showUpgrade}
-        onClose={() => setShowUpgrade(false)}
+        onClose={() => {
+          setShowUpgrade(false);
+          setUpgradeError(null);
+        }}
         onChooseMonthly={async () => {
   try {
     setUpgradeError(null);
@@ -881,7 +952,7 @@ export default function Goals() {
         await pollSubscriptionUntilActive(popup);
         return;
       }
-      alert('Link de pagamento mensal não configurado.');
+      setUpgradeError('Link de pagamento mensal nao configurado.');
     }
   } catch (e: any) {
     setUpgradeError(e?.message || 'Falha ao iniciar checkout mensal');
@@ -926,7 +997,7 @@ export default function Goals() {
         await pollSubscriptionUntilActive(popup);
         return;
       }
-      alert('Link de pagamento anual não configurado.');
+      setUpgradeError('Link de pagamento anual nao configurado.');
     }
   } catch (e: any) {
     setUpgradeError(e?.message || 'Falha ao iniciar checkout anual');
