@@ -355,12 +355,13 @@ export default function Preferences() {
                     <button
                       type="button"
                       role="switch"
+                      aria-label="Ativar lembrete semanal"
                       aria-checked={notifyWeekly}
                       onClick={() => setNotifyWeekly((current) => !current)}
                       className={`relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#41B36E]/30 ${notifyWeekly ? "bg-[#41B36E]" : "bg-slate-300"}`}
                     >
                       <span
-                        className={`absolute top-0 h-6 w-6 rounded-full bg-white border border-slate-300 transition-transform ${notifyWeekly ? "translate-x-5" : "translate-x-0"}`}
+                        className={`absolute left-0 top-0 h-6 w-6 rounded-full bg-white border border-slate-300 transition-transform ${notifyWeekly ? "translate-x-5" : "translate-x-0"}`}
                       />
                     </button>
                     <div className="flex-1">
@@ -399,9 +400,7 @@ export default function Preferences() {
                   disabled={loading}
                   className="h-12 rounded-xl border border-[#F96B11] text-[#F96B11] font-semibold px-5 hover:bg-[#F96B11] hover:text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20v-6h-6M5.64 18.36A9 9 0 1020 12" />
-                  </svg>
+                  <span className="text-base leading-none" aria-hidden="true">↻</span>
                   Redefinir Avaliação
                 </button>
 
