@@ -1,31 +1,26 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface UserInfo {
   email: string;
   name?: string;
+  birthDate?: string;
 }
 
-// Função para limpar todos os dados de autenticação e cache
 function clearAuthData() {
-  // Remove token do localStorage
-  localStorage.removeItem('lb_token');
-  
-  // Remove dados específicos da aplicação
-  localStorage.removeItem('lb_goals');
-  localStorage.removeItem('lb_assessment');
-  localStorage.removeItem('lb_user_data');
-  
-  // Remove dados do sessionStorage
-  sessionStorage.removeItem('editAssessment');
+  localStorage.removeItem("lb_token");
+  localStorage.removeItem("lb_goals");
+  localStorage.removeItem("lb_assessment");
+  localStorage.removeItem("lb_user_data");
+
+  sessionStorage.removeItem("editAssessment");
   sessionStorage.clear();
-  
-  // Limpa cookies relacionados à autenticação
-  document.cookie.split(";").forEach((c) => {
-    const eqPos = c.indexOf("=");
-    const name = eqPos > -1 ? c.substr(0, eqPos) : c;
-    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+
+  document.cookie.split(";").forEach((cookie) => {
+    const eqPos = cookie.indexOf("=");
+    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
   });
 }
 
@@ -37,45 +32,57 @@ export function useUser() {
   const logout = () => {
     clearAuthData();
     setUser(null);
-    navigate('/', { replace: true });
-    // Força reload da página para limpar qualquer estado residual
+    navigate("/", { replace: true });
     window.location.reload();
   };
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = localStorage.getItem('lb_token');
+        const token = localStorage.getItem("lb_token");
         if (!token) {
           setLoading(false);
           return;
         }
 
         const API = import.meta.env.VITE_API_BASE_URL as string;
-        const response = await fetch(`${API}/api/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
 
-        if (response.ok) {
-          const userData = await response.json();
-          setUser({ 
+        const preferencesResponse = await fetch(`${API}/api/user/preferences`, { headers });
+
+        if (preferencesResponse.ok) {
+          const userData = await preferencesResponse.json();
+          setUser({
             email: userData.email,
-            name: userData.name 
+            name: userData.name,
+            birthDate: userData.birthDate,
           });
-        } else {
-          // Só força logout com 401/403. Para outros erros, mantém sessão e tenta novamente depois.
-          if (response.status === 401 || response.status === 403) {
-            console.log('Token inválido (', response.status, '), fazendo logout automático...');
-            logout();
-          } else {
-            console.warn('Falha ao buscar /me (status:', response.status, '). Mantendo sessão.');
-          }
+          return;
+        }
+
+        if (preferencesResponse.status === 401 || preferencesResponse.status === 403) {
+          logout();
+          return;
+        }
+
+        const meResponse = await fetch(`${API}/api/me`, { headers });
+        if (meResponse.ok) {
+          const meData = await meResponse.json();
+          setUser({
+            email: meData.email,
+            name: meData.name,
+          });
+          return;
+        }
+
+        if (meResponse.status === 401 || meResponse.status === 403) {
+          logout();
+          return;
         }
       } catch (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
-        // Em erro de rede, mantém sessão para evitar logout indevido
+        console.error("Erro ao buscar dados do usuario:", error);
       } finally {
         setLoading(false);
       }
