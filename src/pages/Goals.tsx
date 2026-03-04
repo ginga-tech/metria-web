@@ -885,7 +885,7 @@ export default function Goals() {
                     className="h-10 w-full md:w-72 rounded-xl border border-gray-200 px-3 bg-white text-[#2F6C92] outline-none focus:ring-2 focus:ring-[#41B36E] focus:border-transparent transition-all"
                   >
                     <option value="period">Metas do período atual</option>
-                    <option value="all_active">Todas as metas ativas (paginado)</option>
+                    <option value="all_active">Todas as metas ativas</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-3">
