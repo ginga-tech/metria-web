@@ -20,6 +20,14 @@ function formatDate(value?: string | null): string {
   return new Date(time).toLocaleString("pt-BR");
 }
 
+function formatExpirationAt2359(value?: string | null): string {
+  if (!value) return "-";
+  const time = Date.parse(value);
+  if (Number.isNaN(time)) return "-";
+  const datePart = new Date(time).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  return `${datePart} 23:59`;
+}
+
 function planLabel(plan?: string | null): string {
   if (!plan) return "Plano nao informado";
   const raw = plan.toLowerCase();
@@ -134,7 +142,7 @@ export default function Subscriptions() {
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Validade</p>
-            <p className="mt-1 text-xl font-bold text-[#2F6C92]">{active?.endAtUtc ? formatDate(active.endAtUtc) : "-"}</p>
+            <p className="mt-1 text-xl font-bold text-[#2F6C92]">{active?.endAtUtc ? formatExpirationAt2359(active.endAtUtc) : "-"}</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Historico</p>
@@ -189,7 +197,7 @@ export default function Subscriptions() {
 
                     <div className="grid grid-cols-1 gap-1 text-xs text-slate-600 md:text-right">
                       <p>Inicio: {formatDate(s.startedAtUtc)}</p>
-                      <p>Fim: {formatDate(s.endAtUtc)}</p>
+                      <p>Fim: {formatExpirationAt2359(s.endAtUtc)}</p>
                       <p>Criado: {formatDate(s.createdAtUtc)}</p>
                     </div>
                   </div>

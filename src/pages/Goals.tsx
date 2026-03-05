@@ -169,7 +169,8 @@ export default function Goals() {
     if (!renewsAtUtc) return "data não informada";
     const date = new Date(renewsAtUtc);
     if (Number.isNaN(date.getTime())) return "data não informada";
-    return date.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    const datePart = date.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    return `${datePart} 23:59`;
   }
 
   function showSubscriptionSuccess(info?: SubscriptionInfo | null) {
