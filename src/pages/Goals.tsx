@@ -617,19 +617,7 @@ export default function Goals() {
   }
 
   async function startCheckoutFlow(plan: "monthly" | "annual") {
-    const priceId = (plan === "annual"
-      ? import.meta.env.VITE_STRIPE_PRICE_ANNUAL
-      : import.meta.env.VITE_STRIPE_PRICE_MONTHLY) as string | undefined;
-
-    if (!priceId) {
-      throw new Error(
-        plan === "annual"
-          ? "Preço anual não configurado. Defina VITE_STRIPE_PRICE_ANNUAL."
-          : "Preço mensal não configurado. Defina VITE_STRIPE_PRICE_MONTHLY."
-      );
-    }
-
-    const { url } = await createCheckoutSession(priceId);
+    const { url } = await createCheckoutSession(plan);
     const popup = openCenteredPopup(url, plan === "annual" ? "Assinatura Anual" : "Assinatura Mensal");
     await pollSubscriptionUntilActive(popup);
   }

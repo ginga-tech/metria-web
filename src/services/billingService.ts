@@ -4,7 +4,7 @@ function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem('lb_token');
   return {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
+    Authorization: token ? `Bearer ${token}` : '',
   };
 }
 
@@ -25,14 +25,14 @@ export async function getSubscriptionStatus(): Promise<SubscriptionInfo> {
   return r.json();
 }
 
-export async function createCheckoutSession(priceId: string): Promise<{ url: string }> {
-  if (!API_BASE) throw new Error('API base URL não configurada');
+export async function createCheckoutSession(plan: 'monthly' | 'annual'): Promise<{ url: string }> {
+  if (!API_BASE) throw new Error('API base URL nao configurada');
   const successUrl = `${window.location.origin}/dashboard?checkout=success`;
   const cancelUrl = `${window.location.origin}/dashboard?checkout=cancel`;
   const r = await fetch(`${API_BASE}/api/billing/checkout`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify({ priceId, successUrl, cancelUrl }),
+    body: JSON.stringify({ plan, successUrl, cancelUrl }),
   });
   if (!r.ok) {
     const t = await r.text();
@@ -42,7 +42,7 @@ export async function createCheckoutSession(priceId: string): Promise<{ url: str
 }
 
 export async function createCustomerPortal(): Promise<{ url: string }> {
-  if (!API_BASE) throw new Error('API base URL não configurada');
+  if (!API_BASE) throw new Error('API base URL nao configurada');
   const returnUrl = `${window.location.origin}/dashboard`;
   const r = await fetch(`${API_BASE}/api/billing/portal`, {
     method: 'POST',
@@ -56,32 +56,28 @@ export async function createCustomerPortal(): Promise<{ url: string }> {
   return r.json();
 }
 
-// Reconcile subscription for current user or by provided identifiers
-export async function syncSubscription(payload?: { email?: string; subscriptionId?: string; customerId?: string; checkoutSessionId?: string }): Promise<{ ok: boolean; subId?: string; status?: string; plan?: string }> {
-  if (!API_BASE) throw new Error('API base URL não configurada');
-  
-  console.log('🔄 Calling sync API with payload:', payload);
-  
+export async function syncSubscription(payload?: {
+  email?: string;
+  subscriptionId?: string;
+  customerId?: string;
+  checkoutSessionId?: string;
+}): Promise<{ ok: boolean; subId?: string; status?: string; plan?: string }> {
+  if (!API_BASE) throw new Error('API base URL nao configurada');
+
   const r = await fetch(`${API_BASE}/api/billing/sync`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload ?? {}),
   });
-  
-  console.log('📡 Sync API response status:', r.status);
-  
+
   if (!r.ok) {
     const t = await r.text();
-    console.log('❌ Sync API error response:', t);
     throw new Error(t || 'Falha ao sincronizar assinatura');
   }
-  
-  const result = await r.json();
-  console.log('✅ Sync API success response:', result);
-  return result;
+
+  return r.json();
 }
 
-// List all subscriptions for the current user
 export type SubscriptionRecord = {
   id?: string;
   provider?: string | null;
@@ -117,13 +113,11 @@ export async function getSubscriptions(): Promise<SubscriptionRecord[]> {
   }));
 }
 
-// Optional: Payment Link shortcut (single URL that contains both plans)
+// Legacy helpers kept for compatibility (unused in current paywall flow)
 export function getPaymentLinkUrl(): string | undefined {
-  // When set, front can redirect directly without creating a Checkout Session
   return import.meta.env.VITE_STRIPE_PAYMENT_LINK_URL as string | undefined;
 }
 
-// Preferred: separate links for each plan
 export function getMonthlyPaymentLinkUrl(): string | undefined {
   return import.meta.env.VITE_STRIPE_PAYMENT_LINK_URL_MONTHLY as string | undefined;
 }
