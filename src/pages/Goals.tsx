@@ -8,11 +8,9 @@ import { createGoal, updateGoal, deleteGoal, getGoals } from "../services/goalsS
 import UpgradeModal from "../components/UpgradeModal";
 import { 
   getSubscriptionStatus, 
-  getPaymentLinkUrl,
-  getMonthlyPaymentLinkUrl,
-  getAnnualPaymentLinkUrl,
   createCheckoutSession,
   syncSubscription,
+  type SubscriptionInfo,
 } from "../services/billingService";
 import { GOAL_CATEGORIES as SHARED_GOAL_CATEGORIES } from "../constants/assessment";
 
@@ -147,6 +145,39 @@ export default function Goals() {
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const [lastPlan, setLastPlan] = useState<'monthly' | 'annual' | null>(null);
   const [showFreeBanner, setShowFreeBanner] = useState(true);
+  const [subscriptionSuccessModal, setSubscriptionSuccessModal] = useState<{
+    planLabel: string;
+    validUntilLabel: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!subscriptionSuccessModal) return;
+    const timer = window.setTimeout(() => {
+      setSubscriptionSuccessModal(null);
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [subscriptionSuccessModal]);
+
+  function getPlanLabel(plan?: string | null) {
+    const normalized = (plan || "").toLowerCase();
+    if (normalized === "annual") return "Anual";
+    if (normalized === "monthly") return "Mensal";
+    return "Ativo";
+  }
+
+  function getValidUntilLabel(renewsAtUtc?: string | null) {
+    if (!renewsAtUtc) return "data não informada";
+    const date = new Date(renewsAtUtc);
+    if (Number.isNaN(date.getTime())) return "data não informada";
+    return date.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  }
+
+  function showSubscriptionSuccess(info?: SubscriptionInfo | null) {
+    setSubscriptionSuccessModal({
+      planLabel: getPlanLabel(info?.plan),
+      validUntilLabel: getValidUntilLabel(info?.renewsAtUtc),
+    });
+  }
 
   function openCenteredPopup(url: string, title: string, w = 520, h = 720) {
     const dualScreenLeft = window.screenLeft ?? window.screenX ?? 0;
@@ -301,6 +332,7 @@ export default function Goals() {
 
           const info = await getSubscriptionStatus();
           if (info?.active) {
+            showSubscriptionSuccess(info);
             try { if (popup && !popup.closed) popup.close(); } catch { /* ignore */ }
             finish("success");
             return;
@@ -584,20 +616,23 @@ export default function Goals() {
     }
   }
 
-  // Preferir Payment Links por padrão; pode alternar para Checkout via env
-  function withPrefilledEmail(url: string | undefined, email: string | undefined | null) {
-    if (!url) return url;
-    try {
-      const u = new URL(url);
-      if (email) u.searchParams.set('prefilled_email', email);
-      // Opcional: client_reference_id para facilitar matching no webhook (nem todo Payment Link usa)
-      if (email) u.searchParams.set('client_reference_id', email);
-      return u.toString();
-    } catch {
-      return url;
+  async function startCheckoutFlow(plan: "monthly" | "annual") {
+    const priceId = (plan === "annual"
+      ? import.meta.env.VITE_STRIPE_PRICE_ANNUAL
+      : import.meta.env.VITE_STRIPE_PRICE_MONTHLY) as string | undefined;
+
+    if (!priceId) {
+      throw new Error(
+        plan === "annual"
+          ? "Preço anual não configurado. Defina VITE_STRIPE_PRICE_ANNUAL."
+          : "Preço mensal não configurado. Defina VITE_STRIPE_PRICE_MONTHLY."
+      );
     }
+
+    const { url } = await createCheckoutSession(priceId);
+    const popup = openCenteredPopup(url, plan === "annual" ? "Assinatura Anual" : "Assinatura Mensal");
+    await pollSubscriptionUntilActive(popup);
   }
-  const BILLING_FLOW = (import.meta.env.VITE_BILLING_FLOW as string | undefined)?.toLowerCase?.() || 'payment_links';
 
   function toggle(id: string) {
     setState((s) => ({ 
@@ -1006,43 +1041,7 @@ export default function Goals() {
   try {
     setUpgradeError(null);
     setLastPlan('monthly');
-    if (BILLING_FLOW === 'checkout') {
-      const priceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY as string | undefined;
-      if (priceId) {
-        const { url } = await createCheckoutSession(priceId);
-        const popup = openCenteredPopup(url, 'Assinatura Mensal');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      // Fallback automático para Payment Link
-      const monthly = withPrefilledEmail(getMonthlyPaymentLinkUrl(), user?.email);
-      if (monthly) {
-        const popup = openCenteredPopup(monthly, 'Assinatura Mensal');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      const link = withPrefilledEmail(getPaymentLinkUrl(), user?.email);
-      if (link) {
-        const popup = openCenteredPopup(link, 'Assinatura');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      setUpgradeError('Preço mensal não configurado e nenhum Payment Link disponível.');
-    } else {
-      const monthly = withPrefilledEmail(getMonthlyPaymentLinkUrl(), user?.email);
-      if (monthly) {
-        const popup = openCenteredPopup(monthly, 'Assinatura Mensal');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      const link = withPrefilledEmail(getPaymentLinkUrl(), user?.email);
-      if (link) {
-        const popup = openCenteredPopup(link, 'Assinatura');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      setUpgradeError('Link de pagamento mensal nao configurado.');
-    }
+    await startCheckoutFlow("monthly");
   } catch (e: any) {
     setUpgradeError(e?.message || 'Falha ao iniciar checkout mensal');
   }
@@ -1051,43 +1050,7 @@ export default function Goals() {
   try {
     setUpgradeError(null);
     setLastPlan('annual');
-    if (BILLING_FLOW === 'checkout') {
-      const priceId = import.meta.env.VITE_STRIPE_PRICE_ANNUAL as string | undefined;
-      if (priceId) {
-        const { url } = await createCheckoutSession(priceId);
-        const popup = openCenteredPopup(url, 'Assinatura Anual');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      // Fallback automático para Payment Link
-      const annual = withPrefilledEmail(getAnnualPaymentLinkUrl(), user?.email);
-      if (annual) {
-        const popup = openCenteredPopup(annual, 'Assinatura Anual');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      const link = withPrefilledEmail(getPaymentLinkUrl(), user?.email);
-      if (link) {
-        const popup = openCenteredPopup(link, 'Assinatura');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      setUpgradeError('Preço anual não configurado e nenhum Payment Link disponível.');
-    } else {
-      const annual = withPrefilledEmail(getAnnualPaymentLinkUrl(), user?.email);
-      if (annual) {
-        const popup = openCenteredPopup(annual, 'Assinatura Anual');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      const link = withPrefilledEmail(getPaymentLinkUrl(), user?.email);
-      if (link) {
-        const popup = openCenteredPopup(link, 'Assinatura');
-        await pollSubscriptionUntilActive(popup);
-        return;
-      }
-      setUpgradeError('Link de pagamento anual nao configurado.');
-    }
+    await startCheckoutFlow("annual");
   } catch (e: any) {
     setUpgradeError(e?.message || 'Falha ao iniciar checkout anual');
   }
@@ -1101,49 +1064,7 @@ export default function Goals() {
           try {
             setUpgradeError(null);
             const plan = lastPlan === 'annual' ? 'annual' : 'monthly';
-            if (BILLING_FLOW === 'checkout') {
-              const priceId = (plan === 'annual'
-                ? import.meta.env.VITE_STRIPE_PRICE_ANNUAL
-                : import.meta.env.VITE_STRIPE_PRICE_MONTHLY) as string | undefined;
-              if (priceId) {
-                const { url } = await createCheckoutSession(priceId);
-                const popup = openCenteredPopup(url, plan === 'annual' ? 'Assinatura Anual' : 'Assinatura Mensal');
-                await pollSubscriptionUntilActive(popup);
-                return;
-              }
-              // Fallback automático para Payment Link
-              const url = plan === 'annual'
-                ? withPrefilledEmail(getAnnualPaymentLinkUrl(), user?.email)
-                : withPrefilledEmail(getMonthlyPaymentLinkUrl(), user?.email);
-              if (url) {
-                const popup = openCenteredPopup(url, plan === 'annual' ? 'Assinatura Anual' : 'Assinatura Mensal');
-                await pollSubscriptionUntilActive(popup);
-                return;
-              }
-              const link = withPrefilledEmail(getPaymentLinkUrl(), user?.email);
-              if (link) {
-                const popup = openCenteredPopup(link, 'Assinatura');
-                await pollSubscriptionUntilActive(popup);
-                return;
-              }
-              setUpgradeError(plan === 'annual' ? 'Preço anual não configurado e nenhum Payment Link disponível.' : 'Preço mensal não configurado e nenhum Payment Link disponível.');
-            } else {
-              const url = plan === 'annual'
-                ? withPrefilledEmail(getAnnualPaymentLinkUrl(), user?.email)
-                : withPrefilledEmail(getMonthlyPaymentLinkUrl(), user?.email);
-              if (url) {
-                const popup = openCenteredPopup(url, plan === 'annual' ? 'Assinatura Anual' : 'Assinatura Mensal');
-                await pollSubscriptionUntilActive(popup);
-                return;
-              }
-              const link = withPrefilledEmail(getPaymentLinkUrl(), user?.email);
-              if (link) {
-                const popup = openCenteredPopup(link, 'Assinatura');
-                await pollSubscriptionUntilActive(popup);
-                return;
-              }
-              setUpgradeError('Nenhum link de pagamento configurado.');
-            }
+            await startCheckoutFlow(plan);
           } catch (e:any) {
             setUpgradeError(e?.message || 'Falha ao iniciar checkout');
           }
@@ -1151,6 +1072,21 @@ export default function Goals() {
 
       {isCheckingSubscription && (
         <PageLoader overlay message={checkoutStatusMessage} />
+      )}
+
+      {subscriptionSuccessModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
+          <div className="relative w-full max-w-md rounded-2xl border border-[#41B36E]/30 bg-white p-6 shadow-2xl">
+            <h3 className="text-xl font-bold text-[#2F6C92]">Assinatura confirmada</h3>
+            <p className="mt-2 text-sm text-[#2F6C92]/85">
+              Inscrição realizada com sucesso no plano <span className="font-semibold">{subscriptionSuccessModal.planLabel}</span>.
+            </p>
+            <p className="mt-1 text-sm text-[#2F6C92]/85">
+              Válido até <span className="font-semibold">{subscriptionSuccessModal.validUntilLabel}</span>.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
