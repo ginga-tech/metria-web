@@ -1129,18 +1129,18 @@ export default function Goals() {
                   {displayedGoals.map((goal) => (
                     <div
                       key={goal.id}
-                      className={`overflow-hidden rounded-xl border-2 p-4 transition-all duration-200 ${
+                      className={`relative w-full max-w-full overflow-hidden rounded-xl border-2 p-4 transition-all duration-200 ${
                         goal.done
                           ? 'border-[#41B36E]/30 bg-[#41B36E]/5'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
-                      <div className="flex items-start gap-4">
+                      <div className="flex w-full min-w-0 items-start gap-4">
                         <input
                           type="checkbox"
                           checked={goal.done}
                           onChange={() => toggle(goal.id)}
-                          className="mt-1 h-5 w-5 rounded border-gray-300 text-[#41B36E] focus:ring-[#41B36E] focus:ring-offset-0"
+                          className="mt-1 h-5 w-5 shrink-0 rounded border-gray-300 text-[#41B36E] focus:ring-[#41B36E] focus:ring-offset-0"
                         />
 
                         <div className="min-w-0 flex-1">
@@ -1160,7 +1160,7 @@ export default function Goals() {
                               )}
                             </div>
 
-                            <div className="shrink-0 self-start flex items-center gap-2">
+                            <div className="shrink-0 self-start pr-1 flex items-center gap-2">
                               <button
                                 onClick={() => toggleSubGoals(goal.id, goal)}
                                 className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold transition-all duration-200 cursor-pointer ${
@@ -1189,12 +1189,12 @@ export default function Goals() {
                           </div>
 
                           {expandedGoalIds[goal.id] && (
-                            <div className="mt-4 max-w-full rounded-xl border border-slate-200 bg-white p-3">
+                            <div className="mt-4 w-full max-w-full overflow-x-hidden rounded-xl border border-slate-200 bg-white p-3">
                               <p className="mb-2 text-xs text-slate-500">
                                 Período permitido: {goal.startDate} até {goal.endDate}
                               </p>
 
-                              <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-start md:gap-2 lg:flex-nowrap">
+                              <div className="flex w-full min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:items-start md:gap-2 lg:flex-nowrap">
                                 <input
                                   value={subGoalDrafts[goal.id]?.text || ""}
                                   onChange={(e) => updateSubGoalDraft(goal.id, { text: e.target.value }, goal)}
@@ -1202,7 +1202,7 @@ export default function Goals() {
                                   className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E] md:min-w-[220px] md:flex-1"
                                   placeholder="Nome da sub-meta"
                                 />
-                                <div className="w-full min-w-0 md:w-[160px] md:flex-none lg:w-[170px]">
+                                <div className="w-full min-w-0 md:w-[155px] md:flex-none lg:w-[170px]">
                                   <DatePicker
                                     selected={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate)}
                                     onChange={(date) => updateSubGoalDraft(goal.id, { startDate: date ? toDateInputValue(date) : "" }, goal)}
@@ -1215,7 +1215,7 @@ export default function Goals() {
                                     className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
                                   />
                                 </div>
-                                <div className="w-full min-w-0 md:w-[160px] md:flex-none lg:w-[170px]">
+                                <div className="w-full min-w-0 md:w-[155px] md:flex-none lg:w-[170px]">
                                   <DatePicker
                                     selected={parseDateInputValue(subGoalDrafts[goal.id]?.endDate || goal.endDate)}
                                     onChange={(date) => updateSubGoalDraft(goal.id, { endDate: date ? toDateInputValue(date) : "" }, goal)}
@@ -1232,7 +1232,7 @@ export default function Goals() {
                                   onClick={() => addSubGoalForGoal(goal)}
                                   title="Adicionar"
                                   aria-label="Adicionar"
-                                  className="inline-flex h-10 w-12 items-center justify-center self-start rounded-lg bg-gradient-to-r from-[#41B36E] to-[#10B981] text-xl font-bold leading-none text-white shadow-sm transition-all duration-200 hover:brightness-110 cursor-pointer md:flex-none"
+                                  className="inline-flex h-10 w-12 items-center justify-center self-start rounded-lg bg-gradient-to-r from-[#41B36E] to-[#10B981] text-xl font-bold leading-none text-white shadow-sm transition-all duration-200 hover:brightness-110 cursor-pointer md:mr-1 md:flex-none"
                                 >
                                   +
                                 </button>
