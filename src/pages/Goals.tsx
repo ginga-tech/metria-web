@@ -1,5 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DatePicker, { registerLocale } from "react-datepicker";
+import { ptBR } from "date-fns/locale";
 import UserMenu from "../components/UserMenu";
 import PageLoader from "../components/PageLoader";
 import { useUser } from "../hooks/useUser";
@@ -23,6 +25,9 @@ import {
   type SubscriptionInfo,
 } from "../services/billingService";
 import { GOAL_CATEGORIES as SHARED_GOAL_CATEGORIES } from "../constants/assessment";
+import "react-datepicker/dist/react-datepicker.css";
+
+registerLocale("pt-BR", ptBR);
 
 /**
  * Sistema de Metas Completo
@@ -68,6 +73,24 @@ const GOAL_PERIODS = {
   annual: { label: 'Anual', icon: '🎯', color: '#EF4444' },
   custom: { label: 'Personalizado', icon: '⚙️', color: '#6B7280' }
 };
+
+function toDateInputValue(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function parseDateInputValue(value?: string): Date | null {
+  if (!value) return null;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const parsed = new Date(year, month - 1, day);
+  if (parsed.getFullYear() !== year || parsed.getMonth() !== month - 1 || parsed.getDate() !== day) {
+    return null;
+  }
+  return parsed;
+}
 
 function getPeriodDates(
   period: GoalPeriod,
@@ -1140,13 +1163,17 @@ export default function Goals() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => toggleSubGoals(goal.id, goal)}
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#2F6C92]/30 text-sm font-bold text-[#2F6C92] hover:bg-[#2F6C92]/5 cursor-pointer"
-                                title="Incluir sub-meta"
-                                aria-label="Incluir sub-meta"
+                                className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold transition-all duration-200 cursor-pointer ${
+                                  expandedGoalIds[goal.id]
+                                    ? "border-[#2F6C92] bg-[#2F6C92] text-white shadow-sm hover:bg-[#245a7d]"
+                                    : "border-[#2F6C92]/30 bg-white text-[#2F6C92] hover:border-[#41B36E] hover:bg-[#41B36E]/10 hover:text-[#2A8D56]"
+                                }`}
+                                title={expandedGoalIds[goal.id] ? "Ocultar sub-meta" : "Adicionar sub-meta"}
+                                aria-label={expandedGoalIds[goal.id] ? "Ocultar sub-meta" : "Adicionar sub-meta"}
                               >
                                 {expandedGoalIds[goal.id] ? "−" : "+"}
                               </button>
-                              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#2F6C92]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#2F6C92]">
+                              <span className="inline-flex min-w-5 items-center justify-center rounded-full border border-[#2F6C92]/20 bg-[#2F6C92]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#2F6C92]">
                                 {(subGoalsByGoalId[goal.id] || []).length}
                               </span>
                               <button
@@ -1173,23 +1200,27 @@ export default function Goals() {
                                   onChange={(e) => updateSubGoalDraft(goal.id, { text: e.target.value }, goal)}
                                   onKeyDown={(e) => { if (e.key === "Enter") addSubGoalForGoal(goal); }}
                                   className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
-                                  placeholder="Nome da sub-goal"
+                                  placeholder="Nome da sub-meta"
                                 />
-                                <input
-                                  type="date"
-                                  value={subGoalDrafts[goal.id]?.startDate || goal.startDate}
-                                  min={goal.startDate}
-                                  max={goal.endDate}
-                                  onChange={(e) => updateSubGoalDraft(goal.id, { startDate: e.target.value }, goal)}
-                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
+                                <DatePicker
+                                  selected={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate)}
+                                  onChange={(date) => updateSubGoalDraft(goal.id, { startDate: date ? toDateInputValue(date) : "" }, goal)}
+                                  dateFormat="dd/MM/yyyy"
+                                  placeholderText="Início"
+                                  locale="pt-BR"
+                                  minDate={parseDateInputValue(goal.startDate) || undefined}
+                                  maxDate={parseDateInputValue(goal.endDate) || undefined}
+                                  className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
                                 />
-                                <input
-                                  type="date"
-                                  value={subGoalDrafts[goal.id]?.endDate || goal.endDate}
-                                  min={goal.startDate}
-                                  max={goal.endDate}
-                                  onChange={(e) => updateSubGoalDraft(goal.id, { endDate: e.target.value }, goal)}
-                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
+                                <DatePicker
+                                  selected={parseDateInputValue(subGoalDrafts[goal.id]?.endDate || goal.endDate)}
+                                  onChange={(date) => updateSubGoalDraft(goal.id, { endDate: date ? toDateInputValue(date) : "" }, goal)}
+                                  dateFormat="dd/MM/yyyy"
+                                  placeholderText="Fim"
+                                  locale="pt-BR"
+                                  minDate={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate) || parseDateInputValue(goal.startDate) || undefined}
+                                  maxDate={parseDateInputValue(goal.endDate) || undefined}
+                                  className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
                                 />
                                 <button
                                   onClick={() => addSubGoalForGoal(goal)}
@@ -1201,7 +1232,7 @@ export default function Goals() {
 
                               <div className="mt-3 space-y-2">
                                 {(subGoalsByGoalId[goal.id] || []).length === 0 ? (
-                                  <p className="text-xs text-slate-500">Nenhuma sub-goal cadastrada.</p>
+                                  <p className="text-xs text-slate-500">Nenhuma sub-meta cadastrada.</p>
                                 ) : (
                                   (subGoalsByGoalId[goal.id] || []).map((subGoal) => (
                                     <div key={subGoal.id} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
