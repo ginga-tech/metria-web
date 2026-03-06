@@ -4,7 +4,17 @@ import UserMenu from "../components/UserMenu";
 import PageLoader from "../components/PageLoader";
 import { useUser } from "../hooks/useUser";
 import { getPreferredFirstName } from "../utils/userDisplay";
-import { createGoal, updateGoal, deleteGoal, getGoals } from "../services/goalsService";
+import {
+  createGoal,
+  updateGoal,
+  deleteGoal,
+  getGoals,
+  getSubGoals,
+  createSubGoal,
+  updateSubGoal,
+  deleteSubGoal,
+  type SubGoal as ApiSubGoal,
+} from "../services/goalsService";
 import UpgradeModal from "../components/UpgradeModal";
 import { 
   getSubscriptionStatus, 
@@ -36,6 +46,8 @@ type Goal = {
   updatedAtUtc?: string;
   updatedBy?: string;
 };
+
+type SubGoal = ApiSubGoal;
 
 // Categorias baseadas nas dimensões do Assessment
 
@@ -149,6 +161,9 @@ export default function Goals() {
     planLabel: string;
     validUntilLabel: string;
   } | null>(null);
+  const [subGoalsByGoalId, setSubGoalsByGoalId] = useState<Record<string, SubGoal[]>>({});
+  const [expandedGoalIds, setExpandedGoalIds] = useState<Record<string, boolean>>({});
+  const [subGoalDrafts, setSubGoalDrafts] = useState<Record<string, { text: string; startDate: string; endDate: string }>>({});
 
   useEffect(() => {
     if (!subscriptionSuccessModal) return;
@@ -439,6 +454,24 @@ export default function Goals() {
         
         console.log('🔄 Metas mapeadas:', mapped);
         setState((s) => ({ ...s, items: mapped }));
+
+        const subGoalPairs = await Promise.all(
+          mapped.map(async (goal) => {
+            try {
+              const subGoals = await getSubGoals(goal.id);
+              const normalized = (subGoals || []).map((sg) => ({
+                ...sg,
+                startDate: dateOnly(sg.startDate),
+                endDate: dateOnly(sg.endDate),
+              }));
+              return [goal.id, normalized] as const;
+            } catch {
+              return [goal.id, []] as const;
+            }
+          })
+        );
+
+        setSubGoalsByGoalId(Object.fromEntries(subGoalPairs));
         console.log('✅ Metas carregadas no estado');
       } catch (err) {
         console.error('❌ Erro ao carregar metas:', err);
@@ -609,6 +642,7 @@ export default function Goals() {
       };
       
       setState((s) => ({ ...s, items: [localGoal, ...s.items] }));
+      setSubGoalsByGoalId((prev) => ({ ...prev, [localGoal.id]: [] }));
       setText("");
       setCategory("");
     } catch (error: any) {
@@ -643,17 +677,135 @@ export default function Goals() {
 
   function remove(id: string) {
     const prevItems = state.items;
+    const prevSubGoals = subGoalsByGoalId[id] || [];
     // Remove locally first (optimistic update)
     setState((s) => ({ 
       ...s, 
       items: s.items.filter((g) => g.id !== id)
     }));
+    setSubGoalsByGoalId((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setExpandedGoalIds((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setSubGoalDrafts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     // Call DELETE endpoint on backend
     deleteGoal(id).catch((err) => {
       console.error('Erro ao remover meta:', err);
       // revert on error
       setState((s) => ({ ...s, items: prevItems }));
+      setSubGoalsByGoalId((prev) => ({ ...prev, [id]: prevSubGoals }));
       alert('Falha ao remover meta. Tente novamente.');
+    });
+  }
+
+  function toggleSubGoals(goalId: string, goal: Goal) {
+    setExpandedGoalIds((prev) => {
+      const next = !prev[goalId];
+      if (next) {
+        setSubGoalDrafts((drafts) => ({
+          ...drafts,
+          [goalId]: drafts[goalId] || { text: "", startDate: goal.startDate, endDate: goal.endDate },
+        }));
+      }
+      return { ...prev, [goalId]: next };
+    });
+  }
+
+  function updateSubGoalDraft(goalId: string, patch: Partial<{ text: string; startDate: string; endDate: string }>, goal: Goal) {
+    setSubGoalDrafts((prev) => {
+      const current = prev[goalId] || { text: "", startDate: goal.startDate, endDate: goal.endDate };
+      return {
+        ...prev,
+        [goalId]: { ...current, ...patch },
+      };
+    });
+  }
+
+  async function addSubGoalForGoal(goal: Goal) {
+    const draft = subGoalDrafts[goal.id] || { text: "", startDate: goal.startDate, endDate: goal.endDate };
+    const text = draft.text.trim();
+    if (!text) {
+      alert("Informe o nome da sub-meta.");
+      return;
+    }
+
+    if (!draft.startDate || !draft.endDate) {
+      alert("Informe inicio e fim da sub-meta.");
+      return;
+    }
+
+    if (draft.startDate < goal.startDate || draft.endDate > goal.endDate) {
+      alert("A sub-meta deve estar dentro do periodo da meta principal.");
+      return;
+    }
+
+    try {
+      const created = await createSubGoal(goal.id, {
+        text,
+        startDate: draft.startDate,
+        endDate: draft.endDate,
+      });
+
+      const normalized: SubGoal = {
+        ...created,
+        startDate: created.startDate,
+        endDate: created.endDate,
+      };
+
+      setSubGoalsByGoalId((prev) => ({
+        ...prev,
+        [goal.id]: [normalized, ...(prev[goal.id] || [])],
+      }));
+      setSubGoalDrafts((prev) => ({
+        ...prev,
+        [goal.id]: { ...draft, text: "" },
+      }));
+    } catch (error: any) {
+      alert(error?.message || "Erro ao criar sub-meta.");
+    }
+  }
+
+  function toggleSubGoalDone(goalId: string, subGoalId: string) {
+    const currentItems = subGoalsByGoalId[goalId] || [];
+    const target = currentItems.find((s) => s.id === subGoalId);
+    if (!target) return;
+
+    const nextDone = !target.done;
+    setSubGoalsByGoalId((prev) => ({
+      ...prev,
+      [goalId]: (prev[goalId] || []).map((s) => (s.id === subGoalId ? { ...s, done: nextDone } : s)),
+    }));
+
+    updateSubGoal(goalId, subGoalId, { done: nextDone }).catch((error) => {
+      console.error("Erro ao atualizar sub-meta:", error);
+      setSubGoalsByGoalId((prev) => ({
+        ...prev,
+        [goalId]: (prev[goalId] || []).map((s) => (s.id === subGoalId ? { ...s, done: target.done } : s)),
+      }));
+    });
+  }
+
+  function removeSubGoalFromGoal(goalId: string, subGoalId: string) {
+    const previous = subGoalsByGoalId[goalId] || [];
+    setSubGoalsByGoalId((prev) => ({
+      ...prev,
+      [goalId]: (prev[goalId] || []).filter((s) => s.id !== subGoalId),
+    }));
+
+    deleteSubGoal(goalId, subGoalId).catch((error) => {
+      console.error("Erro ao remover sub-meta:", error);
+      setSubGoalsByGoalId((prev) => ({ ...prev, [goalId]: previous }));
+      alert("Falha ao remover sub-meta. Tente novamente.");
     });
   }
 
@@ -946,39 +1098,125 @@ export default function Goals() {
               ) : (
                 <div className="space-y-3">
                   {displayedGoals.map((goal) => (
-                    <div key={goal.id} className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 ${
-                      goal.done 
-                        ? 'border-[#41B36E]/30 bg-[#41B36E]/5' 
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                    }`}>
-                      <input
-                        type="checkbox"
-                        checked={goal.done}
-                        onChange={() => toggle(goal.id)}
-                        className="h-5 w-5 rounded border-gray-300 text-[#41B36E] focus:ring-[#41B36E] focus:ring-offset-0"
-                      />
-                      <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span className={`${
-                        goal.done 
-                          ? "text-gray-500 line-through" 
-                          : "text-[#2F6C92] font-medium"
-                        }`}>
-                          {goal.text}
-                        </span>
-                        {goal.category && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-[#2F6C92]/10 text-[#2F6C92]">
-                            {SHARED_GOAL_CATEGORIES.find(c => c.key === goal.category)?.label || goal.category}
-                          </span>
-                        )}
+                    <div
+                      key={goal.id}
+                      className={`rounded-xl border-2 p-4 transition-all duration-200 ${
+                        goal.done
+                          ? 'border-[#41B36E]/30 bg-[#41B36E]/5'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <input
+                          type="checkbox"
+                          checked={goal.done}
+                          onChange={() => toggle(goal.id)}
+                          className="mt-1 h-5 w-5 rounded border-gray-300 text-[#41B36E] focus:ring-[#41B36E] focus:ring-offset-0"
+                        />
+
+                        <div className="flex-1">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                              <span
+                                className={`${
+                                  goal.done ? "text-gray-500 line-through" : "text-[#2F6C92] font-medium"
+                                }`}
+                              >
+                                {goal.text}
+                              </span>
+                              {goal.category && (
+                                <span className="inline-flex items-center rounded-lg bg-[#2F6C92]/10 px-2 py-1 text-xs font-medium text-[#2F6C92]">
+                                  {SHARED_GOAL_CATEGORIES.find((c) => c.key === goal.category)?.label || goal.category}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => toggleSubGoals(goal.id, goal)}
+                                className="h-8 rounded-lg border border-[#2F6C92]/30 px-3 text-xs font-semibold text-[#2F6C92] hover:bg-[#2F6C92]/5 cursor-pointer"
+                              >
+                                {expandedGoalIds[goal.id] ? "Ocultar Sub-goals" : "Sub-goals"} ({(subGoalsByGoalId[goal.id] || []).length})
+                              </button>
+                              <button
+                                onClick={() => remove(goal.id)}
+                                className="rounded-lg p-2 text-lg font-bold leading-none text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer"
+                                aria-label="Remover meta"
+                                title="Remover meta"
+                              >
+                                X
+                              </button>
+                            </div>
+                          </div>
+
+                          {expandedGoalIds[goal.id] && (
+                            <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
+                              <p className="mb-2 text-xs text-slate-500">
+                                Período permitido: {goal.startDate} até {goal.endDate}
+                              </p>
+
+                              <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+                                <input
+                                  value={subGoalDrafts[goal.id]?.text || ""}
+                                  onChange={(e) => updateSubGoalDraft(goal.id, { text: e.target.value }, goal)}
+                                  onKeyDown={(e) => { if (e.key === "Enter") addSubGoalForGoal(goal); }}
+                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
+                                  placeholder="Nome da sub-goal"
+                                />
+                                <input
+                                  type="date"
+                                  value={subGoalDrafts[goal.id]?.startDate || goal.startDate}
+                                  min={goal.startDate}
+                                  max={goal.endDate}
+                                  onChange={(e) => updateSubGoalDraft(goal.id, { startDate: e.target.value }, goal)}
+                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
+                                />
+                                <input
+                                  type="date"
+                                  value={subGoalDrafts[goal.id]?.endDate || goal.endDate}
+                                  min={goal.startDate}
+                                  max={goal.endDate}
+                                  onChange={(e) => updateSubGoalDraft(goal.id, { endDate: e.target.value }, goal)}
+                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
+                                />
+                                <button
+                                  onClick={() => addSubGoalForGoal(goal)}
+                                  className="h-10 rounded-lg bg-[#2F6C92] px-3 text-sm font-semibold text-white hover:bg-[#245a7d] cursor-pointer"
+                                >
+                                  Adicionar
+                                </button>
+                              </div>
+
+                              <div className="mt-3 space-y-2">
+                                {(subGoalsByGoalId[goal.id] || []).length === 0 ? (
+                                  <p className="text-xs text-slate-500">Nenhuma sub-goal cadastrada.</p>
+                                ) : (
+                                  (subGoalsByGoalId[goal.id] || []).map((subGoal) => (
+                                    <div key={subGoal.id} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={subGoal.done}
+                                        onChange={() => toggleSubGoalDone(goal.id, subGoal.id)}
+                                        className="h-4 w-4 rounded border-gray-300 text-[#41B36E] focus:ring-[#41B36E]"
+                                      />
+                                      <div className="flex-1">
+                                        <p className={`text-sm ${subGoal.done ? "line-through text-slate-500" : "text-[#2F6C92]"}`}>{subGoal.text}</p>
+                                        <p className="text-[11px] text-slate-500">{subGoal.startDate} até {subGoal.endDate}</p>
+                                      </div>
+                                      <button
+                                        onClick={() => removeSubGoalFromGoal(goal.id, subGoal.id)}
+                                        className="rounded-md px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 cursor-pointer"
+                                      >
+                                        Remover
+                                      </button>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => remove(goal.id)}
-                        className="text-red-600 hover:text-red-700 transition-colors p-2 rounded-lg hover:bg-red-50 cursor-pointer font-bold text-lg leading-none"
-                        aria-label="Remover meta"
-                        title="Remover meta"
-                      >
-                        X
-                      </button>
                     </div>
                   ))}
                 </div>

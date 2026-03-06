@@ -16,6 +16,29 @@ export interface Goal {
   isActive?: boolean;
 }
 
+export interface SubGoal {
+  id: string;
+  goalId: string;
+  text: string;
+  done: boolean;
+  startDate: string;
+  endDate: string;
+  createdAtUtc: string;
+}
+
+export interface CreateSubGoalRequest {
+  text: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface UpdateSubGoalRequest {
+  text?: string;
+  done?: boolean;
+  startDate?: string;
+  endDate?: string;
+}
+
 export interface CreateGoalRequest {
   text: string;
   period: GoalPeriod;
@@ -146,6 +169,89 @@ export async function deleteGoal(id: string): Promise<void> {
   if (!response.ok) {
     const error = await response.text();
     throw new Error(error || `Erro ${response.status} ao remover meta`);
+  }
+}
+
+export async function getSubGoals(goalId: string): Promise<SubGoal[]> {
+  if (!API_BASE) throw new Error('API nÃ£o configurada (VITE_API_BASE_URL ausente).');
+  const response = await fetch(`${API_BASE}/api/goals/${encodeURIComponent(goalId)}/subgoals`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    let msg: any = null;
+    const ct = response.headers.get('content-type') || '';
+    try { msg = ct.includes('application/json') ? await response.json() : await response.text(); } catch {}
+    const details = typeof msg === 'string' ? msg : (msg?.message || msg?.title || JSON.stringify(msg));
+    throw new Error(details || `Erro ${response.status} ao buscar sub-metas`);
+  }
+
+  return response.json();
+}
+
+export async function createSubGoal(goalId: string, request: CreateSubGoalRequest): Promise<SubGoal> {
+  if (!API_BASE) throw new Error('API nÃ£o configurada (VITE_API_BASE_URL ausente).');
+
+  const response = await fetch(`${API_BASE}/api/goals/${encodeURIComponent(goalId)}/subgoals`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      text: request.text,
+      startDate: new Date(request.startDate).toISOString(),
+      endDate: new Date(request.endDate).toISOString(),
+    }),
+  });
+
+  if (!response.ok) {
+    let msg: any = null;
+    const ct = response.headers.get('content-type') || '';
+    try { msg = ct.includes('application/json') ? await response.json() : await response.text(); } catch {}
+    const details = typeof msg === 'string' ? msg : (msg?.message || msg?.title || JSON.stringify(msg));
+    throw new Error(details || `Erro ${response.status} ao criar sub-meta`);
+  }
+
+  return response.json();
+}
+
+export async function updateSubGoal(goalId: string, subGoalId: string, request: UpdateSubGoalRequest): Promise<SubGoal> {
+  if (!API_BASE) throw new Error('API nÃ£o configurada (VITE_API_BASE_URL ausente).');
+  const payload: any = {};
+  if (typeof request.text !== 'undefined') payload.text = request.text;
+  if (typeof request.done !== 'undefined') payload.done = request.done;
+  if (typeof request.startDate !== 'undefined') payload.startDate = new Date(request.startDate).toISOString();
+  if (typeof request.endDate !== 'undefined') payload.endDate = new Date(request.endDate).toISOString();
+
+  const response = await fetch(`${API_BASE}/api/goals/${encodeURIComponent(goalId)}/subgoals/${encodeURIComponent(subGoalId)}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let msg: any = null;
+    const ct = response.headers.get('content-type') || '';
+    try { msg = ct.includes('application/json') ? await response.json() : await response.text(); } catch {}
+    const details = typeof msg === 'string' ? msg : (msg?.message || msg?.title || JSON.stringify(msg));
+    throw new Error(details || `Erro ${response.status} ao atualizar sub-meta`);
+  }
+
+  return response.json();
+}
+
+export async function deleteSubGoal(goalId: string, subGoalId: string): Promise<void> {
+  if (!API_BASE) throw new Error('API nÃ£o configurada (VITE_API_BASE_URL ausente).');
+  const response = await fetch(`${API_BASE}/api/goals/${encodeURIComponent(goalId)}/subgoals/${encodeURIComponent(subGoalId)}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    let msg: any = null;
+    const ct = response.headers.get('content-type') || '';
+    try { msg = ct.includes('application/json') ? await response.json() : await response.text(); } catch {}
+    const details = typeof msg === 'string' ? msg : (msg?.message || msg?.title || JSON.stringify(msg));
+    throw new Error(details || `Erro ${response.status} ao remover sub-meta`);
   }
 }
 
