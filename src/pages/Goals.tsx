@@ -1194,7 +1194,7 @@ export default function Goals() {
                                 Período permitido: {goal.startDate} até {goal.endDate}
                               </p>
 
-                              <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+                              <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,170px)_minmax(0,170px)_48px] md:items-center">
                                 <input
                                   value={subGoalDrafts[goal.id]?.text || ""}
                                   onChange={(e) => updateSubGoalDraft(goal.id, { text: e.target.value }, goal)}
@@ -1210,6 +1210,7 @@ export default function Goals() {
                                   locale="pt-BR"
                                   minDate={parseDateInputValue(goal.startDate) || undefined}
                                   maxDate={parseDateInputValue(goal.endDate) || undefined}
+                                  wrapperClassName="w-full"
                                   className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
                                 />
                                 <DatePicker
@@ -1220,13 +1221,16 @@ export default function Goals() {
                                   locale="pt-BR"
                                   minDate={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate) || parseDateInputValue(goal.startDate) || undefined}
                                   maxDate={parseDateInputValue(goal.endDate) || undefined}
+                                  wrapperClassName="w-full"
                                   className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
                                 />
                                 <button
                                   onClick={() => addSubGoalForGoal(goal)}
-                                  className="h-10 rounded-lg bg-[#2F6C92] px-3 text-sm font-semibold text-white hover:bg-[#245a7d] cursor-pointer"
+                                  title="Adicionar"
+                                  aria-label="Adicionar"
+                                  className="inline-flex h-10 w-12 items-center justify-center rounded-lg bg-gradient-to-r from-[#41B36E] to-[#10B981] text-xl font-bold leading-none text-white shadow-sm transition-all duration-200 hover:brightness-110 cursor-pointer"
                                 >
-                                  Adicionar
+                                  +
                                 </button>
                               </div>
 
