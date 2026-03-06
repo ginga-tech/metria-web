@@ -676,6 +676,12 @@ export default function Goals() {
   }
 
   function remove(id: string) {
+    const activeSubGoalsCount = (subGoalsByGoalId[id] || []).length;
+    if (activeSubGoalsCount > 0) {
+      alert("Nao e possivel excluir uma meta que possui sub-metas ativas.");
+      return;
+    }
+
     const prevItems = state.items;
     const prevSubGoals = subGoalsByGoalId[id] || [];
     // Remove locally first (optimistic update)
@@ -704,7 +710,7 @@ export default function Goals() {
       // revert on error
       setState((s) => ({ ...s, items: prevItems }));
       setSubGoalsByGoalId((prev) => ({ ...prev, [id]: prevSubGoals }));
-      alert('Falha ao remover meta. Tente novamente.');
+      alert(err?.message || 'Falha ao remover meta. Tente novamente.');
     });
   }
 
@@ -1134,15 +1140,21 @@ export default function Goals() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => toggleSubGoals(goal.id, goal)}
-                                className="h-8 rounded-lg border border-[#2F6C92]/30 px-3 text-xs font-semibold text-[#2F6C92] hover:bg-[#2F6C92]/5 cursor-pointer"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#2F6C92]/30 text-sm font-bold text-[#2F6C92] hover:bg-[#2F6C92]/5 cursor-pointer"
+                                title="Incluir sub-meta"
+                                aria-label="Incluir sub-meta"
                               >
-                                {expandedGoalIds[goal.id] ? "Ocultar Sub-goals" : "Sub-goals"} ({(subGoalsByGoalId[goal.id] || []).length})
+                                {expandedGoalIds[goal.id] ? "−" : "+"}
                               </button>
+                              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#2F6C92]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#2F6C92]">
+                                {(subGoalsByGoalId[goal.id] || []).length}
+                              </span>
                               <button
                                 onClick={() => remove(goal.id)}
-                                className="rounded-lg p-2 text-lg font-bold leading-none text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer"
+                                disabled={(subGoalsByGoalId[goal.id] || []).length > 0}
+                                className="rounded-lg p-2 text-lg font-bold leading-none text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-red-600"
                                 aria-label="Remover meta"
-                                title="Remover meta"
+                                title={(subGoalsByGoalId[goal.id] || []).length > 0 ? "Remova as sub-metas para excluir a meta" : "Remover meta"}
                               >
                                 X
                               </button>
