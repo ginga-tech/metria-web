@@ -1194,41 +1194,45 @@ export default function Goals() {
                                 Período permitido: {goal.startDate} até {goal.endDate}
                               </p>
 
-                              <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,170px)_minmax(0,170px)_48px] md:items-center">
+                              <div className="flex flex-col gap-2 md:flex-row md:items-start md:gap-2">
                                 <input
                                   value={subGoalDrafts[goal.id]?.text || ""}
                                   onChange={(e) => updateSubGoalDraft(goal.id, { text: e.target.value }, goal)}
                                   onKeyDown={(e) => { if (e.key === "Enter") addSubGoalForGoal(goal); }}
-                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
+                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E] md:min-w-[240px] md:flex-1"
                                   placeholder="Nome da sub-meta"
                                 />
-                                <DatePicker
-                                  selected={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate)}
-                                  onChange={(date) => updateSubGoalDraft(goal.id, { startDate: date ? toDateInputValue(date) : "" }, goal)}
-                                  dateFormat="dd/MM/yyyy"
-                                  placeholderText="Início"
-                                  locale="pt-BR"
-                                  minDate={parseDateInputValue(goal.startDate) || undefined}
-                                  maxDate={parseDateInputValue(goal.endDate) || undefined}
-                                  wrapperClassName="w-full"
-                                  className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
-                                />
-                                <DatePicker
-                                  selected={parseDateInputValue(subGoalDrafts[goal.id]?.endDate || goal.endDate)}
-                                  onChange={(date) => updateSubGoalDraft(goal.id, { endDate: date ? toDateInputValue(date) : "" }, goal)}
-                                  dateFormat="dd/MM/yyyy"
-                                  placeholderText="Fim"
-                                  locale="pt-BR"
-                                  minDate={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate) || parseDateInputValue(goal.startDate) || undefined}
-                                  maxDate={parseDateInputValue(goal.endDate) || undefined}
-                                  wrapperClassName="w-full"
-                                  className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
-                                />
+                                <div className="w-full md:w-[170px] md:flex-none">
+                                  <DatePicker
+                                    selected={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate)}
+                                    onChange={(date) => updateSubGoalDraft(goal.id, { startDate: date ? toDateInputValue(date) : "" }, goal)}
+                                    dateFormat="dd/MM/yyyy"
+                                    placeholderText="Início"
+                                    locale="pt-BR"
+                                    minDate={parseDateInputValue(goal.startDate) || undefined}
+                                    maxDate={parseDateInputValue(goal.endDate) || undefined}
+                                    wrapperClassName="w-full"
+                                    className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
+                                  />
+                                </div>
+                                <div className="w-full md:w-[170px] md:flex-none">
+                                  <DatePicker
+                                    selected={parseDateInputValue(subGoalDrafts[goal.id]?.endDate || goal.endDate)}
+                                    onChange={(date) => updateSubGoalDraft(goal.id, { endDate: date ? toDateInputValue(date) : "" }, goal)}
+                                    dateFormat="dd/MM/yyyy"
+                                    placeholderText="Fim"
+                                    locale="pt-BR"
+                                    minDate={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate) || parseDateInputValue(goal.startDate) || undefined}
+                                    maxDate={parseDateInputValue(goal.endDate) || undefined}
+                                    wrapperClassName="w-full"
+                                    className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
+                                  />
+                                </div>
                                 <button
                                   onClick={() => addSubGoalForGoal(goal)}
                                   title="Adicionar"
                                   aria-label="Adicionar"
-                                  className="inline-flex h-10 w-12 items-center justify-center rounded-lg bg-gradient-to-r from-[#41B36E] to-[#10B981] text-xl font-bold leading-none text-white shadow-sm transition-all duration-200 hover:brightness-110 cursor-pointer"
+                                  className="inline-flex h-10 w-12 items-center justify-center self-start rounded-lg bg-gradient-to-r from-[#41B36E] to-[#10B981] text-xl font-bold leading-none text-white shadow-sm transition-all duration-200 hover:brightness-110 cursor-pointer md:flex-none"
                                 >
                                   +
                                 </button>
