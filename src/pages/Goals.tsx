@@ -1129,7 +1129,7 @@ export default function Goals() {
                   {displayedGoals.map((goal) => (
                     <div
                       key={goal.id}
-                      className={`relative w-full max-w-full overflow-hidden rounded-xl border-2 p-4 transition-all duration-200 ${
+                      className={`relative w-full max-w-full rounded-xl border-2 p-4 transition-all duration-200 ${
                         goal.done
                           ? 'border-[#41B36E]/30 bg-[#41B36E]/5'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -1189,7 +1189,7 @@ export default function Goals() {
                           </div>
 
                           {expandedGoalIds[goal.id] && (
-                            <div className="mt-4 w-full max-w-full overflow-x-hidden rounded-xl border border-slate-200 bg-white p-3">
+                            <div className="mt-4 w-full max-w-full rounded-xl border border-slate-200 bg-white p-3">
                               <p className="mb-2 text-xs text-slate-500">
                                 Período permitido: {goal.startDate} até {goal.endDate}
                               </p>
@@ -1211,6 +1211,8 @@ export default function Goals() {
                                     locale="pt-BR"
                                     minDate={parseDateInputValue(goal.startDate) || undefined}
                                     maxDate={parseDateInputValue(goal.endDate) || undefined}
+                                    popperPlacement="bottom-start"
+                                    showPopperArrow={false}
                                     wrapperClassName="w-full"
                                     className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
                                   />
@@ -1224,6 +1226,8 @@ export default function Goals() {
                                     locale="pt-BR"
                                     minDate={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate) || parseDateInputValue(goal.startDate) || undefined}
                                     maxDate={parseDateInputValue(goal.endDate) || undefined}
+                                    popperPlacement="bottom-start"
+                                    showPopperArrow={false}
                                     wrapperClassName="w-full"
                                     className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
                                   />
