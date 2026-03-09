@@ -174,6 +174,7 @@ export default function Goals() {
   const [goalsView, setGoalsView] = useState<"period" | "all_active">("period");
   const [activeGoalsPage, setActiveGoalsPage] = useState(1);
   const [subscriptionActive, setSubscriptionActive] = useState<boolean>(false);
+  const [subscriptionLoaded, setSubscriptionLoaded] = useState<boolean>(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
   const [checkoutStatusMessage, setCheckoutStatusMessage] = useState("Aguardando confirmacao do pagamento...");
@@ -510,6 +511,8 @@ export default function Goals() {
         setSubscriptionActive(!!info.active);
       } catch {
         setSubscriptionActive(false);
+      } finally {
+        setSubscriptionLoaded(true);
       }
     })();
   }, []);
@@ -880,7 +883,7 @@ export default function Goals() {
         </header>
 
         {/* Aviso de plano gratuito (sem assinatura ativa) - versão alerta */}
-        {!subscriptionActive && showFreeBanner && (
+        {subscriptionLoaded && !subscriptionActive && showFreeBanner && (
           <div
             className="relative mb-6 rounded-xl border border-[#F59E0B]/60 bg-[#F59E0B]/15 p-4 shadow-sm cursor-pointer"
             role="alert"
