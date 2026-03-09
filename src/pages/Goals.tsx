@@ -1199,10 +1199,10 @@ export default function Goals() {
                                   value={subGoalDrafts[goal.id]?.text || ""}
                                   onChange={(e) => updateSubGoalDraft(goal.id, { text: e.target.value }, goal)}
                                   onKeyDown={(e) => { if (e.key === "Enter") addSubGoalForGoal(goal); }}
-                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E] md:min-w-[220px] md:flex-1"
+                                  className="h-10 rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E] md:min-w-[200px] md:flex-1"
                                   placeholder="Nome da sub-meta"
                                 />
-                                <div className="w-full min-w-0 md:w-[155px] md:flex-none lg:w-[170px]">
+                                <div className="w-full min-w-0 md:w-[135px] md:flex-none lg:w-[145px]">
                                   <DatePicker
                                     selected={parseDateInputValue(subGoalDrafts[goal.id]?.startDate || goal.startDate)}
                                     onChange={(date) => updateSubGoalDraft(goal.id, { startDate: date ? toDateInputValue(date) : "" }, goal)}
@@ -1217,7 +1217,7 @@ export default function Goals() {
                                     className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none focus:ring-2 focus:ring-[#41B36E]"
                                   />
                                 </div>
-                                <div className="w-full min-w-0 md:w-[155px] md:flex-none lg:w-[170px]">
+                                <div className="w-full min-w-0 md:w-[135px] md:flex-none lg:w-[145px]">
                                   <DatePicker
                                     selected={parseDateInputValue(subGoalDrafts[goal.id]?.endDate || goal.endDate)}
                                     onChange={(date) => updateSubGoalDraft(goal.id, { endDate: date ? toDateInputValue(date) : "" }, goal)}
