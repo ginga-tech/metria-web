@@ -22,6 +22,12 @@ Optional (checkout price ids when needed by feature flags/flows):
 - `VITE_STRIPE_PRICE_MONTHLY`
 - `VITE_STRIPE_PRICE_ANNUAL`
 
+Recommendation:
+
+- do not use browser-exposed Stripe env vars for the active checkout flow
+- prefer `VITE_API_BASE_URL` pointing to `metria-project`
+- keep Stripe secrets and canonical price ids only in backend env
+
 ## Backend (`metria-project`) - integration-critical
 
 OAuth:

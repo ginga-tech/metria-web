@@ -5,6 +5,12 @@
 - Frontend service: `metria-web`
 - Backend service: `metria-project`
 
+## Separation Rule
+
+`metria-web` should only publish `VITE_API_BASE_URL` and other browser-safe configuration.
+
+Sensitive Stripe runtime variables must be configured only in the `metria-project` Railway service, never in the frontend repository or browser bundle.
+
 ## Frontend Checklist
 
 - `VITE_API_BASE_URL` points to active backend domain.
